@@ -128,7 +128,7 @@
   </header>
 
   <!-- ========================================================================= -->
-  <!-- SECTION A: TEACHER CONTROL CENTER (เริ่มต้นด้วยหน้านี้เสมอ)                 -->
+  <!-- SECTION A: TEACHER CONTROL CENTER                                         -->
   <!-- ========================================================================= -->
   <main id="teacherPortalContainer" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
 
@@ -144,7 +144,7 @@
             ห้องควบคุมคุณครู & จัดการข้อสอบ
           </h2>
           <p class="text-slate-300 text-xs sm:text-sm max-w-xl">
-            สร้าง Magic Link ส่งให้นักเรียนเข้าทำข้อสอบทันที, มอนิเตอร์ผลคะแนนสด, แก้ไขข้อสอบทั้ง 105 ข้อในเว็บ, และเชื่อมต่อ Google Sheets รับคะแนนอัตโนมัติ
+            สร้าง Magic Link ส่งให้นักเรียนเข้าทำข้อสอบทันที, ตรวจคำตอบของเด็กทีละข้อ, มอนิเตอร์ผลคะแนนสด, แก้ไขข้อสอบทั้ง 105 ข้อในเว็บ, และเชื่อมต่อ Google Sheets
           </p>
         </div>
 
@@ -231,9 +231,9 @@
         <div>
           <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
             <i class="fa-solid fa-users text-indigo-600"></i>
-            <span>จัดการบัญชีนักเรียน, ลิงก์เข้าสอบ & ฟีดแบค (Student Roster & Magic Links)</span>
+            <span>จัดการบัญชีนักเรียน, ตรวจข้อสอบรายคน & ลิงก์เข้าสอบ (Student Roster)</span>
           </h3>
-          <p class="text-xs text-slate-500">กดปุ่ม "คัดลอกลิงก์" ส่งให้นักเรียนทาง LINE นักเรียนกดลิงก์แล้วจะ Auto-Login เข้าทำข้อสอบได้ทันที</p>
+          <p class="text-xs text-slate-500">กดปุ่ม <b>"📄 ตรวจข้อสอบรายข้อ"</b> เพื่อดูอย่างละเอียดว่าเด็กตอบข้อไหน ตอบถูกหรือผิด และเลือกตัวเลือกใด</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -264,7 +264,7 @@
               <th class="py-3 px-3">ห้อง</th>
               <th class="py-3 px-3 text-center">ข้อที่ทำ</th>
               <th class="py-3 px-3 text-center">ความแม่นยำ</th>
-              <th class="py-3 px-3 text-center">จุดที่ต้องพัฒนา</th>
+              <th class="py-3 px-3 text-center">กระดาษคำตอบรายข้อ</th>
               <th class="py-3 px-3 text-center">Magic Link สำหรับนักเรียน</th>
               <th class="py-3 px-3 text-center">การจัดการ</th>
             </tr>
@@ -282,8 +282,6 @@
 
     <!-- STUDENT VIEW 1: DASHBOARD / HOME -->
     <section id="view-student-home" class="space-y-4 sm:space-y-6 view-transition">
-      
-      <!-- Student Personalized Hero Banner -->
       <div class="relative overflow-hidden rounded-3xl gradient-hero text-white p-5 sm:p-8 shadow-xl">
         <div class="relative z-10 max-w-2xl space-y-3">
           <div class="flex items-center gap-2">
@@ -585,6 +583,42 @@
 
   <!-- ================= MODALS ================= -->
 
+  <!-- MODAL: DETAILED INDIVIDUAL STUDENT EXAM ANSWERS (ตรวจกระดาษคำตอบรายข้อ) -->
+  <div id="studentExamAnswersModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-3">
+          <div id="examModalAvatar" class="w-12 h-12 rounded-2xl bg-indigo-100 text-2xl flex items-center justify-center">🦸‍♂️</div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-extrabold text-slate-800 text-base" id="examModalStudentName">ชื่อนักเรียน</h3>
+              <span id="examModalStudentScoreBadge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800">25/30 (83%)</span>
+            </div>
+            <p class="text-xs text-slate-500" id="examModalStudentMeta">ป.3/1 • กระดาษคำตอบรายบุคคล</p>
+          </div>
+        </div>
+        <button onclick="closeStudentExamAnswersModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Quick Answer Filters -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+          <button id="examFilterAll" onclick="filterExamAnswers('all')" class="px-3 py-1 rounded-lg bg-white shadow-sm text-indigo-700 transition">ทั้งหมด (<span id="examCountAll">0</span>)</button>
+          <button id="examFilterWrong" onclick="filterExamAnswers('wrong')" class="px-3 py-1 rounded-lg text-rose-700 hover:bg-white/60 transition">เฉพาะที่ผิด ❌ (<span id="examCountWrong">0</span>)</button>
+          <button id="examFilterCorrect" onclick="filterExamAnswers('correct')" class="px-3 py-1 rounded-lg text-emerald-700 hover:bg-white/60 transition">เฉพาะที่ถูก ✅ (<span id="examCountCorrect">0</span>)</button>
+        </div>
+        <div class="text-xs text-slate-400">
+          <i class="fa-regular fa-lightbulb text-amber-500"></i> แสดงตัวเลือกที่เด็กกา + เฉลยพร้อมวิธีคิด
+        </div>
+      </div>
+
+      <!-- Itemized Answer Cards List -->
+      <div class="flex-grow overflow-y-auto space-y-3 pr-1" id="studentExamQuestionsList"></div>
+    </div>
+  </div>
+
   <!-- MODAL 1: QUESTION MANAGER & EDITOR -->
   <div id="questionManagerModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
@@ -725,7 +759,6 @@
         </button>
       </div>
 
-      <!-- Step 1: Download Template (Multi-sheet Excel with Category Reference) -->
       <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
         <div class="flex items-center justify-between">
           <div class="font-bold text-xs text-slate-800">ขั้นตอนที่ 1: ดาวน์โหลดไฟล์ Excel Template (มีชีต Category_Reference อ้างอิงรหัสหมวดหมู่)</div>
@@ -736,13 +769,11 @@
         <p class="text-[11px] text-slate-500">ไฟล์ประกอบด้วย 2 แผ่นงาน: แผ่นแรกสำหรับพิมพ์ข้อสอบ และแผ่นที่สอง (Category_Reference) อธิบายรหัสหมวดหมู่ทั้งหมด</p>
       </div>
 
-      <!-- Step 2: Upload File -->
       <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-2.5">
         <div class="font-bold text-xs text-emerald-900">ขั้นตอนที่ 2: อัปโหลดไฟล์ Excel (.xlsx) หรือ .csv ที่กรอกข้อสอบแล้ว</div>
         <input type="file" id="bulkFileInput" accept=".csv, .xlsx, .xls" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
       </div>
 
-      <!-- Step 3: Copy-paste Word text -->
       <div class="space-y-1.5">
         <label class="font-bold text-slate-700 text-xs block">หรือ วางข้อความจาก Word ตามรูปแบบ:</label>
         <textarea id="bulkWordText" rows="4" placeholder="[Q] 45 + 50 เท่ากับเท่าใด&#10;[A] 85&#10;[B] 95*&#10;[C] 100&#10;[D] 90&#10;[EXP] 45 + 50 = 95" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-mono"></textarea>
@@ -853,7 +884,7 @@
     </div>
   </div>
 
-  <!-- MODAL 6: TEACHER FEEDBACK & INDIVIDUAL DRILLDOWN -->
+  <!-- MODAL 6: TEACHER FEEDBACK -->
   <div id="teacherFeedbackModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -971,9 +1002,10 @@
     let currentAppRole = 'teacher';
     let currentStudent = null;
     let currentLang = 'th';
-    // Pre-filled with user's verified Google Apps Script URL
     let googleSheetWebhook = 'https://script.google.com/macros/s/AKfycbyEeY_C6dCJD8FUCcKtFUxnVscuFFG6sqQg468r_xreQO0gsTPnf48bPITt9ttBo0tpNw/exec';
     let activeStudentFeedbackIdx = null;
+    let activeExamDrillStudentIdx = null;
+    let currentExamFilter = 'all';
 
     let currentStudentProgress = {
       completedQuestions: {},
@@ -1009,12 +1041,12 @@
 
     function loadStorage() {
       try {
-        const savedQuestions = localStorage.getItem('nt_questions_v5');
+        const savedQuestions = localStorage.getItem('nt_questions_v6');
         if (savedQuestions) questions = JSON.parse(savedQuestions);
       } catch(e) { console.warn(e); }
 
       try {
-        const savedClass = localStorage.getItem('nt_classroom_v5');
+        const savedClass = localStorage.getItem('nt_classroom_v6');
         if (savedClass) {
           classroomDatabase = JSON.parse(savedClass);
         } else {
@@ -1025,25 +1057,45 @@
       }
 
       try {
-        const savedWebhook = localStorage.getItem('nt_gsheet_webhook_v5');
+        const savedWebhook = localStorage.getItem('nt_gsheet_webhook_v6');
         if (savedWebhook) googleSheetWebhook = savedWebhook;
       } catch(e) {}
     }
 
     function saveStorage() {
       try {
-        localStorage.setItem('nt_questions_v5', JSON.stringify(questions));
-        localStorage.setItem('nt_classroom_v5', JSON.stringify(classroomDatabase));
-        localStorage.setItem('nt_gsheet_webhook_v5', googleSheetWebhook);
+        localStorage.setItem('nt_questions_v6', JSON.stringify(questions));
+        localStorage.setItem('nt_classroom_v6', JSON.stringify(classroomDatabase));
+        localStorage.setItem('nt_gsheet_webhook_v6', googleSheetWebhook);
       } catch(e) { console.warn(e); }
     }
 
     function generateInitialClassroom() {
       classroomDatabase = [
-        { id: "1", name: "ด.ช. ภัทรพล สิทธิกุล", no: "1", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🦸‍♂️", completed: 35, accuracy: 88, scores: { num: 95, ops: 90, frac: 80, meas: 85, geo: 90, data: 90 }, feedback: "เก่งมากเรื่องการคิดเลขเร็ว ฝึกเรื่องโจทย์ระคนเพิ่มอีกนิดนะ", feedbackDate: "เมื่อวาน" },
-        { id: "2", name: "ด.ญ. พิชญา ธนโชติ", no: "2", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🧙‍♀️", completed: 48, accuracy: 94, scores: { num: 100, ops: 95, frac: 90, meas: 95, geo: 90, data: 95 }, feedback: "ยอดเยี่ยมมาก ผลงานระดับเหรียญทองแล้วค่ะ รักษามาตรฐานนี้นะคะ", feedbackDate: "วันนี้ 08:30" },
-        { id: "3", name: "ด.ช. ธนกฤต ปัญญาดี", no: "3", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🚀", completed: 20, accuracy: 55, scores: { num: 65, ops: 60, frac: 40, meas: 50, geo: 60, data: 55 }, feedback: "ลองฝึกทำโจทย์เรื่อง 'เศษส่วน' ซ้ำอีกรอบนะลูก ครูพร้อมช่วยอธิบายจ้ะ", feedbackDate: "27 ส.ค." },
-        { id: "4", name: "ด.ญ. ชนัญชิดา วงศ์สว่าง", no: "4", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🐱", completed: 30, accuracy: 78, scores: { num: 85, ops: 80, frac: 70, meas: 75, geo: 80, data: 80 }, feedback: "ทักษะเรขาคณิตและแผนภูมิดีมาก พัฒนาขึ้นเยอะเลยค่ะ", feedbackDate: "28 ส.ค." }
+        { 
+          id: "1", name: "ด.ช. ภัทรพล สิทธิกุล", no: "1", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🦸‍♂️", completed: 35, accuracy: 88, 
+          scores: { num: 95, ops: 90, frac: 80, meas: 85, geo: 90, data: 90 }, 
+          feedback: "เก่งมากเรื่องการคิดเลขเร็ว ฝึกเรื่องโจทย์ระคนเพิ่มอีกนิดนะ", feedbackDate: "เมื่อวาน",
+          answers: { 1: { opt: 0, isCorrect: true }, 2: { opt: 0, isCorrect: true }, 3: { opt: 1, isCorrect: false }, 16: { opt: 0, isCorrect: true }, 41: { opt: 0, isCorrect: true }, 56: { opt: 0, isCorrect: true } }
+        },
+        { 
+          id: "2", name: "ด.ญ. พิชญา ธนโชติ", no: "2", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🧙‍♀️", completed: 48, accuracy: 94, 
+          scores: { num: 100, ops: 95, frac: 90, meas: 95, geo: 90, data: 95 }, 
+          feedback: "ยอดเยี่ยมมาก ผลงานระดับเหรียญทองแล้วค่ะ รักษามาตรฐานนี้นะคะ", feedbackDate: "วันนี้ 08:30",
+          answers: { 1: { opt: 0, isCorrect: true }, 2: { opt: 0, isCorrect: true }, 3: { opt: 0, isCorrect: true }, 16: { opt: 0, isCorrect: true }, 41: { opt: 0, isCorrect: true }, 42: { opt: 0, isCorrect: true } }
+        },
+        { 
+          id: "3", name: "ด.ช. ธนกฤต ปัญญาดี", no: "3", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🚀", completed: 20, accuracy: 55, 
+          scores: { num: 65, ops: 60, frac: 40, meas: 50, geo: 60, data: 55 }, 
+          feedback: "ลองฝึกทำโจทย์เรื่อง 'เศษส่วน' ซ้ำอีกรอบนะลูก ครูพร้อมช่วยอธิบายจ้ะ", feedbackDate: "27 ส.ค.",
+          answers: { 1: { opt: 1, isCorrect: false }, 2: { opt: 0, isCorrect: true }, 3: { opt: 2, isCorrect: false }, 41: { opt: 1, isCorrect: false }, 42: { opt: 1, isCorrect: false } }
+        },
+        { 
+          id: "4", name: "ด.ญ. ชนัญชิดา วงศ์สว่าง", no: "4", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🐱", completed: 30, accuracy: 78, 
+          scores: { num: 85, ops: 80, frac: 70, meas: 75, geo: 80, data: 80 }, 
+          feedback: "ทักษะเรขาคณิตและแผนภูมิดีมาก พัฒนาขึ้นเยอะเลยค่ะ", feedbackDate: "28 ส.ค.",
+          answers: { 1: { opt: 0, isCorrect: true }, 2: { opt: 0, isCorrect: true }, 16: { opt: 0, isCorrect: true }, 17: { opt: 1, isCorrect: false } }
+        }
       ];
       saveStorage();
     }
@@ -1104,7 +1156,6 @@
       document.getElementById('navRoleBadge').innerText = "ครูผู้สอน / Teacher";
       document.getElementById('navSubtitle').innerText = "ศูนย์ควบคุมครู • ห้องเรียน ป.3";
       
-      // Teacher can see switch role button
       const switchBtn = document.getElementById('switchRoleNavBtn');
       if (switchBtn) {
         switchBtn.classList.remove('hidden');
@@ -1224,15 +1275,6 @@
       const baseUrl = window.location.origin + window.location.pathname;
 
       students.forEach((s, idx) => {
-        let lowestCat = "-";
-        if (s.scores) {
-          let minVal = 999;
-          categories.forEach(c => {
-            const v = s.scores[c.id] || 0;
-            if (v < minVal) { minVal = v; lowestCat = c.th; }
-          });
-        }
-
         const magicUrl = baseUrl + '?sid=' + encodeURIComponent(s.id) + '&name=' + encodeURIComponent(s.name) + '&no=' + encodeURIComponent(s.no||s.id) + '&room=' + encodeURIComponent(s.room) + '&avatar=' + encodeURIComponent(s.avatar||'🦸‍♂️');
 
         const tr = document.createElement('tr');
@@ -1250,14 +1292,19 @@
               ${s.accuracy || 0}%
             </span>
           </td>
-          <td class="py-3 px-3 text-center text-rose-600 font-semibold truncate max-w-[110px]">${lowestCat}</td>
+          <td class="py-3 px-3 text-center">
+            <button onclick="openStudentExamAnswersModal(${idx})" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 mx-auto">
+              <i class="fa-solid fa-file-circle-check text-indigo-600"></i>
+              <span>ตรวจข้อสอบรายข้อ</span>
+            </button>
+          </td>
           <td class="py-3 px-3 text-center">
             <button onclick="copySingleStudentLink('${magicUrl}', '${s.name}')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-700 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 mx-auto">
               <i class="fa-solid fa-link"></i> คัดลอกลิงก์
             </button>
           </td>
           <td class="py-3 px-3 text-center space-x-1">
-            <button onclick="openTeacherFeedbackModal(${idx})" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition" title="ฟีดแบค & Spider Chart">
+            <button onclick="openTeacherFeedbackModal(${idx})" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition" title="ฟีดแบค & Spider Chart">
               <i class="fa-solid fa-comment-dots"></i> ฟีดแบค
             </button>
             <button onclick="deleteStudent(${idx})" class="p-1.5 text-slate-400 hover:text-rose-600 transition" title="ลบนักเรียน">
@@ -1279,10 +1326,158 @@
       renderTeacherStudentRoster(filtered);
     }
 
+    // ================= DETAILED EXAM ANSWERS DRILL-DOWN LOGIC =================
+    function openStudentExamAnswersModal(idx) {
+      activeExamDrillStudentIdx = idx;
+      currentExamFilter = 'all';
+      const s = classroomDatabase[idx];
+      if (!s) return;
+
+      document.getElementById('examModalAvatar').innerText = s.avatar || "🦸‍♂️";
+      document.getElementById('examModalStudentName').innerText = s.name;
+      document.getElementById('examModalStudentMeta').innerText = `${s.room} (เลขที่ ${s.no || s.id}) • กระดาษคำตอบและการตรวจข้อสอบรายข้อ`;
+      document.getElementById('examModalStudentScoreBadge').innerText = `ทำแล้ว ${s.completed || 0} ข้อ • ความแม่นยำ ${s.accuracy || 0}%`;
+
+      renderExamAnswersDrilldown();
+      document.getElementById('studentExamAnswersModal').classList.remove('hidden');
+    }
+
+    function closeStudentExamAnswersModal() {
+      document.getElementById('studentExamAnswersModal').classList.add('hidden');
+    }
+
+    function filterExamAnswers(type) {
+      currentExamFilter = type;
+      ['all', 'wrong', 'correct'].forEach(t => {
+        const btn = document.getElementById('examFilter' + (t.charAt(0).toUpperCase() + t.slice(1)));
+        if (btn) {
+          if (t === type) {
+            btn.className = "px-3 py-1 rounded-lg bg-white shadow-sm font-bold text-indigo-700 transition";
+          } else {
+            btn.className = "px-3 py-1 rounded-lg text-slate-600 hover:bg-white/60 transition";
+          }
+        }
+      });
+      renderExamAnswersDrilldown();
+    }
+
+    function renderExamAnswersDrilldown() {
+      const s = classroomDatabase[activeExamDrillStudentIdx];
+      if (!s) return;
+
+      const container = document.getElementById('studentExamQuestionsList');
+      container.innerHTML = '';
+
+      // Collect answers from student record
+      const studentAnswers = s.answers || {};
+      
+      // Let's also check if active user is this student in localStorage
+      let localProg = {};
+      try {
+        const p = localStorage.getItem('nt_student_prog_' + s.id);
+        if (p) localProg = JSON.parse(p).completedQuestions || {};
+      } catch(e) {}
+
+      // Merge saved and current progress
+      const mergedAnswers = { ...studentAnswers };
+      Object.keys(localProg).forEach(qid => {
+        mergedAnswers[qid] = { opt: localProg[qid].selectedOption, isCorrect: localProg[qid].isCorrect };
+      });
+
+      const answeredQIds = Object.keys(mergedAnswers).map(Number);
+      let totalCorrect = 0;
+      let totalWrong = 0;
+
+      answeredQIds.forEach(id => {
+        if (mergedAnswers[id].isCorrect) totalCorrect++;
+        else totalWrong++;
+      });
+
+      document.getElementById('examCountAll').innerText = answeredQIds.length;
+      document.getElementById('examCountWrong').innerText = totalWrong;
+      document.getElementById('examCountCorrect').innerText = totalCorrect;
+
+      if (answeredQIds.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-slate-400 space-y-2">
+            <i class="fa-regular fa-folder-open text-3xl"></i>
+            <p class="text-xs">นักเรียนคนนี้ยังไม่ได้เริ่มทำข้อสอบ หรือยังไม่มีประวัติคำตอบบันทึกเข้ามา</p>
+          </div>
+        `;
+        return;
+      }
+
+      const optLetters = ['ก', 'ข', 'ค', 'ง'];
+
+      questions.forEach((q) => {
+        const userAns = mergedAnswers[q.id];
+        if (!userAns) return; // only show attempted questions
+
+        const isCorrect = userAns.isCorrect;
+        if (currentExamFilter === 'wrong' && isCorrect) return;
+        if (currentExamFilter === 'correct' && !isCorrect) return;
+
+        const catObj = categories.find(c => c.id === q.cat_id) || categories[0];
+        const studentChoiceIdx = userAns.opt;
+        const studentChoiceText = q.options_th[studentChoiceIdx] !== undefined ? q.options_th[studentChoiceIdx] : "ไม่ได้ระบุ";
+        const correctChoiceText = q.options_th[q.answer];
+
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border text-xs transition space-y-2.5 ${isCorrect ? 'bg-emerald-50/40 border-emerald-200' : 'bg-rose-50/50 border-rose-200'}`;
+        
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-black px-2 py-0.5 rounded-md ${isCorrect ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'}">ข้อที่ #${q.id}</span>
+              <span class="font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700">${catObj.th}</span>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full font-black text-xs ${isCorrect ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">
+              ${isCorrect ? '✓ ตอบถูก' : '✗ ตอบผิด'}
+            </span>
+          </div>
+
+          <div class="font-bold text-slate-800 text-sm leading-relaxed">${q.question_th}</div>
+          ${q.question_en ? `<div class="text-slate-500 italic text-[11px]">${q.question_en}</div>` : ''}
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <div class="p-2.5 rounded-xl border ${isCorrect ? 'bg-white border-emerald-300 text-emerald-800' : 'bg-white border-rose-300 text-rose-800'}">
+              <div class="text-[10px] text-slate-400 font-bold mb-0.5">คำตอบที่นักเรียนเลือก:</div>
+              <div class="font-bold flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white ${isCorrect ? 'bg-emerald-600' : 'bg-rose-600'}">
+                  ${optLetters[studentChoiceIdx] || '-'}
+                </span>
+                <span>${studentChoiceText}</span>
+              </div>
+            </div>
+
+            ${!isCorrect ? `
+              <div class="p-2.5 rounded-xl border bg-white border-emerald-300 text-emerald-800">
+                <div class="text-[10px] text-slate-400 font-bold mb-0.5">เฉลยคำตอบที่ถูกต้อง:</div>
+                <div class="font-bold flex items-center gap-1.5">
+                  <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white bg-emerald-600">
+                    ${optLetters[q.answer]}
+                  </span>
+                  <span>${correctChoiceText}</span>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+
+          ${q.explanation_th ? `
+            <div class="p-2 rounded-xl bg-white/80 border border-slate-200 text-slate-600 text-[11px] flex items-start gap-1.5">
+              <span class="text-amber-500 font-bold flex-shrink-0">💡 วิธีคิด:</span>
+              <span>${q.explanation_th}</span>
+            </div>
+          ` : ''}
+        `;
+        container.appendChild(card);
+      });
+    }
+
     function copySingleStudentLink(url, name) {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(() => {
-          alert("คัดลอกลิงก์สำหรับ \"" + name + "\" เรียบร้อยแล้ว! สามารถนำไปส่งให้นักเรียนใน LINE ได้ทันที");
+          alert("คัดลอกลิงก์สำหรับ "" + name + "" เรียบร้อยแล้ว! สามารถนำไปส่งให้นักเรียนใน LINE ได้ทันที");
         });
       } else {
         prompt("คัดลอกลิงก์นี้ส่งให้นักเรียน:", url);
@@ -1295,10 +1490,15 @@
         return;
       }
       const baseUrl = window.location.origin + window.location.pathname;
-      let text = "📚 ลิงก์เข้าทำแบบทดสอบคณิตศาสตร์ NT ป.3 ประจำตัวนักเรียน:\n\n";
+      let text = "📚 ลิงก์เข้าทำแบบทดสอบคณิตศาสตร์ NT ป.3 ประจำตัวนักเรียน:
+
+";
       classroomDatabase.forEach(s => {
         const magicUrl = baseUrl + '?sid=' + encodeURIComponent(s.id) + '&name=' + encodeURIComponent(s.name) + '&no=' + encodeURIComponent(s.no||s.id) + '&room=' + encodeURIComponent(s.room) + '&avatar=' + encodeURIComponent(s.avatar||'🦸‍♂️');
-        text += "• เลขที่ " + (s.no || s.id) + " " + s.name + ":\n" + magicUrl + "\n\n";
+        text += "• เลขที่ " + (s.no || s.id) + " " + s.name + ":
+" + magicUrl + "
+
+";
       });
       if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(() => {
@@ -1314,10 +1514,12 @@
         alert("ยังไม่มีข้อมูลนักเรียน");
         return;
       }
-      let csv = "\uFEFFNo,Name,Classroom,School,Completed_Questions,Accuracy_Percentage,Numbers,Operations,Fractions,Measurement,Geometry,Data,Feedback\n";
+      let csv = "﻿No,Name,Classroom,School,Completed_Questions,Accuracy_Percentage,Numbers,Operations,Fractions,Measurement,Geometry,Data,Feedback
+";
       classroomDatabase.forEach((s, i) => {
         const sc = s.scores || {};
-        csv += '"' + (s.no || s.id || (i+1)) + '","' + s.name + '","' + s.room + '","' + (s.school || '') + '",' + (s.completed || 0) + ',' + (s.accuracy || 0) + ',' + (sc.num || 0) + ',' + (sc.ops || 0) + ',' + (sc.frac || 0) + ',' + (sc.meas || 0) + ',' + (sc.geo || 0) + ',' + (sc.data || 0) + ',"' + ((s.feedback || '').replace(/"/g, '""')) + '"\n';
+        csv += '"' + (s.no || s.id || (i+1)) + '","' + s.name + '","' + s.room + '","' + (s.school || '') + '",' + (s.completed || 0) + ',' + (s.accuracy || 0) + ',' + (sc.num || 0) + ',' + (sc.ops || 0) + ',' + (sc.frac || 0) + ',' + (sc.meas || 0) + ',' + (sc.geo || 0) + ',' + (sc.data || 0) + ',"' + ((s.feedback || '').replace(/"/g, '""')) + '"
+';
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
@@ -1358,7 +1560,8 @@
         accuracy: 0,
         scores: { num: 50, ops: 50, frac: 50, meas: 50, geo: 50, data: 50 },
         feedback: "ยินดีต้อนรับสู่ระบบ NT Math Hero! ขอให้สนุกกับการฝึกทำโจทย์นะลูก",
-        feedbackDate: "ล่าสุด"
+        feedbackDate: "ล่าสุด",
+        answers: {}
       };
 
       classroomDatabase.push(newStudent);
@@ -1607,7 +1810,6 @@
     }
 
     function downloadQuestionTemplateXLSX() {
-      // 1. Questions Sheet Data
       const wsDataQuestions = [
         ["Category_ID", "Question_TH", "Question_EN", "Choice_A", "Choice_B", "Choice_C", "Choice_D", "Correct_Choice", "Explanation"],
         ["num", "จำนวน แปดหมื่นเก้าสิบห้า เขียนในรูปกระจายได้อย่างไร", "How is eighty thousand and ninety-five written in expanded form?", "80000 + 90 + 5", "80000 + 900 + 5", "8000 + 90 + 5", "80000 + 900 + 50", "A", "80000 + 90 + 5"],
@@ -1618,7 +1820,6 @@
         ["data", "แผนภูมิรูปภาพ: รูปต้นไม้ 1 รูป แทนต้นไม้ 5 ต้น ถ้ามี 7 รูป มีต้นไม้กี่ต้น", "In a pictogram, 1 tree symbol represents 5 trees. If 7 symbols, how many trees?", "35 ต้น", "12 ต้น", "30 ต้น", "40 ต้น", "A", "7 x 5 = 35 ต้น"]
       ];
 
-      // 2. Category Reference Sheet Data
       const wsDataCategories = [
         ["Category_ID (รหัสที่ต้องใช้)", "ชื่อหมวดหมู่ภาษาไทย (Category Thai)", "Category English", "ขอบเขตเนื้อหาตามหลักสูตร NT"],
         ["num", "จำนวนและค่าประจำหลัก / แบบรูป", "Numbers & Place Value", "ค่าประจำหลัก, รูปกระจาย, เปรียบเทียบจำนวนไม่เกิน 100,000, แบบรูปเพิ่ม/ลด"],
@@ -1762,7 +1963,6 @@
       }
     }
 
-    // ================= GOOGLE SHEETS CONFIG & WEBHOOK =================
     function openGoogleSheetsConfigModal() {
       document.getElementById('googleSheetWebhookUrl').value = googleSheetWebhook;
       document.getElementById('googleSheetsConfigModal').classList.remove('hidden');
@@ -1787,7 +1987,6 @@
       }
     }
 
-    // ================= STUDENT PORTAL LOGIC & AUTO-LOGIN =================
     function initStudentPortal() {
       document.getElementById('teacherPortalContainer').classList.add('hidden');
       document.getElementById('studentPortalContainer').classList.remove('hidden');
@@ -1796,7 +1995,6 @@
       document.getElementById('navRoleBadge').innerText = "นักเรียน / Student";
       document.getElementById('navSubtitle').innerText = currentStudent.name + " (เลขที่ " + (currentStudent.no || currentStudent.id) + ") • " + currentStudent.room;
 
-      // STRICT REQUIREMENT: HIDE the switch-to-teacher button in student mode
       const switchBtn = document.getElementById('switchRoleNavBtn');
       if (switchBtn) {
         switchBtn.classList.add('hidden');
@@ -1857,6 +2055,16 @@
         classroomDatabase[idx].completed = completedCount;
         classroomDatabase[idx].accuracy = acc;
         classroomDatabase[idx].scores = getStudentCompetencyScores();
+        
+        // Save answers map directly into student profile
+        const ansMap = {};
+        Object.keys(currentStudentProgress.completedQuestions).forEach(qid => {
+          ansMap[qid] = {
+            opt: currentStudentProgress.completedQuestions[qid].selectedOption,
+            isCorrect: currentStudentProgress.completedQuestions[qid].isCorrect
+          };
+        });
+        classroomDatabase[idx].answers = ansMap;
         saveStorage();
       }
     }
@@ -2037,7 +2245,6 @@
       renderQuizQuestion();
     }
 
-    // ================= QUESTION PALETTE & PROGRESS ENGINE =================
     function renderQuizQuestion() {
       const q = activeQuiz.questionList[activeQuiz.currentIndex];
       if (!q) return;
@@ -2222,7 +2429,6 @@
           scores: getStudentCompetencyScores()
         };
 
-        // Send via fetch (text/plain to prevent CORS preflight blocking in Google Apps Script)
         try {
           fetch(googleSheetWebhook, {
             method: 'POST',
@@ -2344,7 +2550,6 @@
       }
     }
 
-    // Student Edit Profile Modal Handlers
     let studentSelfAvatar = '🦸‍♂️';
     function openEditStudentProfileModal() {
       studentSelfAvatar = currentStudent.avatar || '🦸‍♂️';
@@ -2377,7 +2582,6 @@
       alert("บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว!");
     }
 
-    // ================= UTILITIES & HELPERS =================
     function setLanguage(lang) {
       currentLang = lang;
       document.getElementById('langThBtn').className = lang === 'th' 
@@ -2410,7 +2614,6 @@
     }
     function toggleAudioSpeech() { speakCurrentQuestion(); }
 
-    // Scratchpad
     let padCanvas, padCtx, isDrawing = false, penColor = '#1e293b';
     function initScratchpad() {
       padCanvas = document.getElementById('scratchpadCanvas');
@@ -2466,7 +2669,6 @@
       if (!modal.classList.contains('hidden')) setTimeout(initScratchpad, 60);
     }
 
-    // ================= INITIALIZATION =================
     window.onload = function() {
       try {
         loadStorage();
