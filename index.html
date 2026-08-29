@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#4f46e5">
-  <title>NT Math Hero - ป.3 ตะลุยโจทย์คณิตศาสตร์สองภาษา & ระบบจัดการเรียนรู้ครู-นักเรียน</title>
+  <title>NT Math Hero - ป.3 ระบบคลังข้อสอบ จัดการเรียนรู้ & Teacher Center</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,6 +13,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Canvas Confetti CDN -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- SheetJS (xlsx.full.min.js) for bulk Excel import/export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- FontAwesome CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts: Prompt & Nunito -->
@@ -53,10 +55,13 @@
       background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
     }
     .touch-btn {
-      min-height: 46px;
+      min-height: 44px;
     }
     #scratchpadCanvas {
       touch-action: none;
+    }
+    .view-transition {
+      transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
     }
     @media print {
       .no-print { display: none !important; }
@@ -66,113 +71,40 @@
 </head>
 <body class="min-h-full flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
-  <!-- ================= AUTH VIEW: LOGIN & REGISTER ================= -->
-  <section id="view-auth" class="flex-grow flex items-center justify-center px-4 py-8 max-w-md mx-auto w-full">
-    <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl w-full border border-slate-200 space-y-6">
-      
-      <!-- Brand Header -->
-      <div class="text-center space-y-2">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white text-2xl mx-auto shadow-lg shadow-indigo-200">
-          <i class="fa-solid fa-shapes"></i>
-        </div>
-        <h1 class="text-2xl font-black text-slate-800 tracking-tight">NT Math Hero</h1>
-        <p class="text-xs text-slate-500">ระบบฝึกข้อสอบคณิตศาสตร์ ป.3 & ประเมินสมรรถนะ</p>
-      </div>
-
-      <!-- Quick Demo Account Fast-Login Pills -->
-      <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
-        <div class="text-[11px] font-bold text-slate-500 flex items-center justify-between">
-          <span>⚡ บัญชีทดสอบด่วน (คลิกเข้าได้ทันที):</span>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="quickLoginAs('student')" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold text-indigo-700 flex items-center justify-center gap-1.5 transition active:scale-95">
-            <span>🦸‍♂️ เข้าโหมด "นักเรียน"</span>
-          </button>
-          <button type="button" onclick="quickLoginAs('teacher')" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-xs font-bold text-amber-800 flex items-center justify-center gap-1.5 transition active:scale-95">
-            <span>🎓 เข้าโหมด "คุณครู"</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Login / Register Form -->
-      <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
-        <!-- Role Tabs -->
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">บทบาทของคุณ (Role):</label>
-          <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
-            <button type="button" id="tabRoleStudent" onclick="setAuthRole('student')" class="py-2 text-xs font-black rounded-lg transition bg-white text-indigo-600 shadow-sm">
-              🦸‍♂️ นักเรียน (Student)
-            </button>
-            <button type="button" id="tabRoleTeacher" onclick="setAuthRole('teacher')" class="py-2 text-xs font-black rounded-lg transition text-slate-600 hover:text-slate-900">
-              🎓 คุณครู (Teacher)
-            </button>
-          </div>
-        </div>
-
-        <!-- Name Input -->
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อ - นามสกุล (หรือชื่อเล่น):</label>
-          <input type="text" id="authName" required placeholder="เช่น ด.ญ. กัญญารัตน์ หรือ ครูสมศรี" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-white">
-        </div>
-
-        <!-- Extra details for student -->
-        <div id="studentExtraFields" class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">เลขที่ / No:</label>
-            <input type="text" id="authNo" placeholder="เช่น 15" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-white">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">ห้องเรียน / Room:</label>
-            <input type="text" id="authRoom" placeholder="เช่น ป.3/1" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-white">
-          </div>
-        </div>
-
-        <!-- School -->
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">โรงเรียน / School:</label>
-          <input type="text" id="authSchool" placeholder="เช่น โรงเรียนสาธิตพัฒนา" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-white">
-        </div>
-
-        <button type="submit" class="touch-btn w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black text-sm shadow-lg shadow-indigo-100 transition flex items-center justify-center gap-2">
-          <span>เข้าสู่ระบบ &rarr;</span>
-        </button>
-      </form>
-    </div>
-  </section>
-
-  <!-- ================= APP HEADER NAVBAR (Shown when logged in) ================= -->
-  <header id="mainNavbar" class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm no-print hidden">
+  <!-- ================= TOP MAIN NAVBAR ================= -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm no-print">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
       
-      <!-- Brand -->
-      <div class="flex items-center space-x-2.5 cursor-pointer" onclick="handleLogoClick()">
+      <!-- Brand & Mode Title -->
+      <div class="flex items-center space-x-2.5 cursor-pointer" onclick="handleNavbarBrandClick()">
         <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-200 flex-shrink-0">
           <i class="fa-solid fa-shapes text-lg sm:text-xl"></i>
         </div>
         <div>
           <div class="flex items-center gap-1.5">
             <h1 class="font-black text-base sm:text-lg leading-tight text-slate-800">NT Math Hero</h1>
-            <span id="roleBadge" class="text-[10px] sm:text-xs px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 font-extrabold">นักเรียน</span>
+            <span id="navRoleBadge" class="text-[10px] sm:text-xs px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black">ครูผู้สอน / Teacher</span>
           </div>
-          <p class="text-[10px] text-slate-500 hidden sm:block truncate max-w-[200px]" id="userSubtitle">น้องอลิซ • ป.3/1</p>
+          <p class="text-[10px] text-slate-500 hidden sm:block truncate max-w-[220px]" id="navSubtitle">ศูนย์ควบคุมครู • ห้องเรียน ป.3</p>
         </div>
       </div>
 
-      <!-- Controls -->
+      <!-- Quick Navbar Tools -->
       <div class="flex items-center space-x-1.5 sm:space-x-3">
-        <!-- User Profile Pill -->
-        <div class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-xl text-xs font-bold text-slate-700 border border-slate-200">
-          <span id="navAvatar" class="text-base">🦸‍♂️</span>
-          <span id="navUserName" class="max-w-[100px] truncate">น้องอลิซ</span>
-        </div>
+        
+        <!-- Role Switching Quick Button -->
+        <button id="switchRoleNavBtn" onclick="toggleRoleSwitch()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm bg-slate-100 hover:bg-indigo-50 text-indigo-700 border border-slate-200">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span id="switchRoleNavText">สลับไปหน้า "นักเรียน"</span>
+        </button>
 
-        <!-- Scratchpad Quick Button (Students) -->
-        <button onclick="toggleScratchpad()" class="p-2 bg-amber-50 active:bg-amber-200 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold transition shadow-sm" title="กระดานทดเลข">
+        <!-- Scratchpad (Student Mode) -->
+        <button id="scratchpadNavBtn" onclick="toggleScratchpad()" class="hidden p-2 bg-amber-50 active:bg-amber-200 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold transition shadow-sm" title="กระดานทดเลข">
           <i class="fa-solid fa-pencil text-sm"></i>
         </button>
 
-        <!-- TTS Read Button -->
-        <button onclick="toggleAudioSpeech()" class="p-2 text-slate-600 active:text-indigo-600 active:bg-slate-100 rounded-xl transition" title="อ่านโจทย์">
+        <!-- TTS Read Button (Student Mode) -->
+        <button id="ttsNavBtn" onclick="toggleAudioSpeech()" class="hidden p-2 text-slate-600 active:text-indigo-600 active:bg-slate-100 rounded-xl transition" title="อ่านโจทย์">
           <i class="fa-solid fa-volume-high text-base"></i>
         </button>
 
@@ -185,33 +117,188 @@
             🇬🇧 EN
           </button>
         </div>
-
-        <!-- Logout Button -->
-        <button onclick="logout()" class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition border border-rose-100" title="ออกจากระบบ">
-          <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
-        </button>
       </div>
     </div>
   </header>
 
-  <!-- ================= STUDENT VIEWS ================= -->
-  <main id="studentAppContainer" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 hidden">
+  <!-- ========================================================================= -->
+  <!-- SECTION A: TEACHER CONTROL CENTER (เริ่มต้นด้วยหน้านี้เสมอ)                 -->
+  <!-- ========================================================================= -->
+  <main id="teacherPortalContainer" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
 
-    <!-- STUDENT VIEW 1: HOME -->
-    <section id="view-student-home" class="space-y-4 sm:space-y-6">
+    <!-- Teacher Hero Banner with Quick Stats -->
+    <div class="relative overflow-hidden rounded-3xl gradient-teacher text-white p-5 sm:p-8 shadow-xl">
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-2">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-xs font-bold">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Teacher Command Center • ป.3 NT & Cambridge Math</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white">
+            ห้องควบคุมคุณครู & จัดการข้อสอบ
+          </h2>
+          <p class="text-slate-300 text-xs sm:text-sm max-w-xl">
+            สร้าง Magic Link ส่งให้นักเรียนเข้าทำข้อสอบทันที, มอนิเตอร์ผลคะแนนสด, แก้ไขข้อสอบทั้ง 105 ข้อในเว็บ, และเชื่อมต่อ Google Sheets รับคะแนนอัตโนมัติ
+          </p>
+        </div>
+
+        <!-- Teacher Quick Actions -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openAddStudentModal()" class="touch-btn px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs shadow-md transition flex items-center gap-1.5">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>+ เพิ่มนักเรียน / Gen ลิงก์</span>
+          </button>
+          <button onclick="openQuestionManagerModal()" class="touch-btn px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black text-xs shadow-md transition flex items-center gap-1.5">
+            <i class="fa-solid fa-list-check"></i>
+            <span>คลังข้อสอบ & แก้ไขข้อสอบ</span>
+          </button>
+          <button onclick="openGoogleSheetsConfigModal()" class="touch-btn px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-bold text-xs transition flex items-center gap-1.5">
+            <i class="fa-solid fa-table"></i>
+            <span>เชื่อมต่อ Google Sheets</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classroom KPIs -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      <div class="glass-card rounded-2xl p-4 shadow-sm border-t-4 border-indigo-500">
+        <div class="text-xs font-bold text-slate-500">นักเรียนในห้องเรียน</div>
+        <div class="text-2xl sm:text-3xl font-black text-slate-800 mt-1" id="tKpiTotalStudents">0</div>
+        <div class="text-[11px] text-indigo-600 mt-0.5">คน (มี Magic Link ประจำตัว)</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 shadow-sm border-t-4 border-emerald-500">
+        <div class="text-xs font-bold text-slate-500">คะแนนเฉลี่ยทั้งห้อง (NT Avg)</div>
+        <div class="text-2xl sm:text-3xl font-black text-emerald-600 mt-1" id="tKpiClassAvg">0%</div>
+        <div class="text-[11px] text-slate-500 mt-0.5" id="tKpiAvgStatus">เทียบเกณฑ์มาตรฐาน 80%</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 shadow-sm border-t-4 border-blue-500">
+        <div class="text-xs font-bold text-slate-500">จำนวนข้อสอบในคลัง</div>
+        <div class="text-2xl sm:text-3xl font-black text-blue-600 mt-1" id="tKpiTotalQuestions">105</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">ข้อ (แก้ไข / เพิ่มลบได้สดๆ)</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 shadow-sm border-t-4 border-rose-500">
+        <div class="text-xs font-bold text-slate-500">นักเรียนที่ควรเสริมทักษะ</div>
+        <div class="text-2xl sm:text-3xl font-black text-rose-600 mt-1" id="tKpiNeedHelp">0</div>
+        <div class="text-[11px] text-rose-500 mt-0.5">คะแนนเฉลี่ย &lt; 60%</div>
+      </div>
+    </div>
+
+    <!-- Classroom Spider Chart & Topic Difficulty Breakdown -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+              <i class="fa-solid fa-spider text-indigo-600"></i>
+              <span>Classroom Competency Spider Chart</span>
+            </h3>
+            <p class="text-[11px] text-slate-500">ค่าเฉลี่ยสมรรถนะทั้งห้อง 6 ด้านเปรียบเทียบกับเป้าหมายเหรียญทอง 80%</p>
+          </div>
+          <button onclick="renderTeacherDashboard()" class="text-slate-400 hover:text-indigo-600 transition text-sm">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+        <div class="flex-grow flex items-center justify-center w-full h-[260px] sm:h-[300px] relative">
+          <canvas id="teacherClassRadarChart"></canvas>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+              <i class="fa-solid fa-chart-column text-blue-600"></i>
+              <span>คะแนนเฉลี่ยรายหมวดหมู่ (Topic Breakdown)</span>
+            </h3>
+            <p class="text-[11px] text-slate-500">หมวดที่ทำได้ดี vs หมวดที่ต้องจัดสอนเสริม</p>
+          </div>
+        </div>
+        <div class="flex-grow flex items-center justify-center w-full h-[260px] sm:h-[300px] relative">
+          <canvas id="teacherTopicBarChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Accounts & Live Monitoring Table (พร้อมปุ่ม Copy Magic Link) -->
+    <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-users text-indigo-600"></i>
+            <span>จัดการบัญชีนักเรียน, ลิงก์เข้าสอบ & ฟีดแบค (Student Roster & Magic Links)</span>
+          </h3>
+          <p class="text-xs text-slate-500">กดปุ่ม "คัดลอกลิงก์" ส่งให้นักเรียนทาง LINE นักเรียนกดลิงก์แล้วจะ Auto-Login เข้าทำข้อสอบได้ทันที</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="copyAllStudentLinksForLine()" class="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-brands fa-line text-sm text-emerald-600"></i>
+            <span>คัดลอกลิงก์ทั้งห้องส่ง LINE</span>
+          </button>
+          <button onclick="exportClassroomCSV()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-file-excel text-emerald-600"></i>
+            <span>ส่งออก Excel</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Filter -->
+      <div class="flex items-center gap-2">
+        <input type="text" id="teacherStudentSearch" oninput="filterTeacherStudentTable()" placeholder="ค้นหาชื่อ, เลขที่ หรือห้อง..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none w-full max-w-xs bg-white">
+        <button onclick="openAddStudentModal()" class="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition">
+          <i class="fa-solid fa-plus"></i> เพิ่มนักเรียน
+        </button>
+      </div>
+
+      <!-- Roster Table -->
+      <div class="overflow-x-auto rounded-xl border border-slate-200">
+        <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+          <thead class="bg-slate-50 text-slate-600 font-bold">
+            <tr>
+              <th class="py-3 px-3">เลขที่</th>
+              <th class="py-3 px-3">ชื่อ - นามสกุล</th>
+              <th class="py-3 px-3">ห้อง</th>
+              <th class="py-3 px-3 text-center">ข้อที่ทำ</th>
+              <th class="py-3 px-3 text-center">ความแม่นยำ</th>
+              <th class="py-3 px-3 text-center">จุดที่ต้องพัฒนา</th>
+              <th class="py-3 px-3 text-center">Magic Link สำหรับนักเรียน</th>
+              <th class="py-3 px-3 text-center">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="teacherStudentRosterBody" class="divide-y divide-slate-100 bg-white font-medium text-slate-700">
+            <!-- Dynamically Rendered via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- SECTION B: STUDENT PORTAL (เปิดผ่าน Magic Link หรือสลับโหมด)                 -->
+  <!-- ========================================================================= -->
+  <main id="studentPortalContainer" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 hidden space-y-6">
+
+    <!-- STUDENT VIEW 1: DASHBOARD / HOME -->
+    <section id="view-student-home" class="space-y-4 sm:space-y-6 view-transition">
       
-      <!-- Hero Banner -->
-      <div class="relative overflow-hidden rounded-3xl gradient-hero text-white p-5 sm:p-8 shadow-xl shadow-indigo-100">
+      <!-- Student Personalized Hero Banner -->
+      <div class="relative overflow-hidden rounded-3xl gradient-hero text-white p-5 sm:p-8 shadow-xl">
         <div class="relative z-10 max-w-2xl space-y-3">
-          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold uppercase">
-            <i class="fa-solid fa-award"></i>
-            <span>หลักสูตร NT & Cambridge Primary Math</span>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold uppercase">
+              <i class="fa-solid fa-award"></i>
+              <span>NT & Cambridge Primary Math</span>
+            </span>
+            <button onclick="openEditStudentProfileModal()" class="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-xs font-black hover:bg-amber-300 transition">
+              <i class="fa-solid fa-pen"></i> แก้ไขโปรไฟล์
+            </button>
           </div>
           <h2 class="text-xl sm:text-3xl font-black leading-tight">
-            สวัสดี <span id="studentGreetingName" class="text-amber-300">น้องอลิซ</span>! พร้อมลุยทำข้อสอบหรือยัง?
+            สวัสดี <span id="studentGreetingName" class="text-amber-300">น้องอลิซ</span>! พร้อมพิชิตข้อสอบหรือยัง?
           </h2>
           <p class="text-indigo-100 text-xs sm:text-sm">
-            คลังข้อสอบ 105+ ข้อ พร้อมระบบ Spider Chart วิเคราะห์ทักษะ 6 ด้าน และรับข้อเสนอแนะจากคุณครู
+            คลังข้อสอบมาตรฐาน 105+ ข้อ พร้อมพาเลทตัวเลขตรวจข้อที่ทำแล้ว และ Spider Chart วิเคราะห์ทักษะ
           </p>
           <div class="pt-2 flex flex-wrap gap-2.5">
             <button onclick="startMockExam()" class="touch-btn px-5 py-2.5 rounded-xl bg-white text-indigo-600 font-bold text-xs sm:text-sm shadow-md active:scale-95 transition flex items-center gap-2">
@@ -226,18 +313,18 @@
         </div>
       </div>
 
-      <!-- Teacher Feedback Banner for this student -->
-      <div id="studentTeacherFeedbackCard" class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-amber-500 flex items-start gap-3">
+      <!-- Teacher Feedback Card (ข้อความที่คุณครูส่งถึงเด็กคนนี้) -->
+      <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-amber-500 flex items-start gap-3">
         <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl flex-shrink-0">
           🎓
         </div>
         <div class="space-y-1">
           <div class="flex items-center gap-2">
-            <h4 class="font-bold text-slate-800 text-xs sm:text-sm">ข้อความและฟีดแบคจากคุณครู (Teacher Feedback)</h4>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold" id="feedbackDate">ล่าสุด</span>
+            <h4 class="font-bold text-slate-800 text-xs sm:text-sm">คำแนะนำและฟีดแบคจากคุณครู (Teacher Feedback)</h4>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold" id="studentFeedbackDate">ล่าสุด</span>
           </div>
-          <p class="text-xs sm:text-sm text-slate-600 leading-relaxed" id="studentFeedbackContent">
-            "ตั้งใจฝึกทำโจทย์เรื่องเศษส่วนและการวัดเพิ่มเติมนะลูก ทำได้ดีมากแล้วในหมวดการคำนวณ!"
+          <p class="text-xs sm:text-sm text-slate-600 leading-relaxed" id="studentFeedbackText">
+            "ขอให้สนุกกับการฝึกทำโจทย์นะลูก ตั้งใจทบทวนเรื่องเศษส่วนและการวัดเพิ่มเติมนะ!"
           </p>
         </div>
       </div>
@@ -248,15 +335,15 @@
           <div>
             <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2 mb-3">
               <i class="fa-solid fa-trophy text-amber-500"></i>
-              <span>สถิติความก้าวหน้า</span>
+              <span>สถิติความก้าวหน้าของคุณ</span>
             </h3>
             <div class="grid grid-cols-2 gap-3 my-3">
               <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 text-center">
-                <div class="text-xl sm:text-2xl font-black text-indigo-600" id="statCompleted">0/105</div>
+                <div class="text-xl sm:text-2xl font-black text-indigo-600" id="studentStatCompleted">0/105</div>
                 <div class="text-[11px] text-slate-500 font-medium mt-0.5">ข้อที่ทำแล้ว</div>
               </div>
               <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 text-center">
-                <div class="text-xl sm:text-2xl font-black text-emerald-600" id="statAccuracy">0%</div>
+                <div class="text-xl sm:text-2xl font-black text-emerald-600" id="studentStatAccuracy">0%</div>
                 <div class="text-[11px] text-slate-500 font-medium mt-0.5">ความแม่นยำเฉลี่ย</div>
               </div>
             </div>
@@ -301,7 +388,7 @@
             <i class="fa-solid fa-stopwatch"></i>
           </div>
           <h4 class="font-bold text-slate-800 text-sm sm:text-base">2. จำลองสอบ NT (30 ข้อ)</h4>
-          <p class="text-xs text-slate-500 mt-1">จับเวลา 45 นาที ส่งคะแนนให้คุณครูตรวจทันที</p>
+          <p class="text-xs text-slate-500 mt-1">จับเวลา 45 นาที ส่งคะแนนเข้า Google Sheets ครูอัตโนมัติ</p>
         </div>
 
         <div onclick="startWeaknessExam()" class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm active:scale-[0.99] transition cursor-pointer border-t-4 border-rose-500">
@@ -327,8 +414,10 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6" id="studentTopicsGrid"></div>
     </section>
 
-    <!-- STUDENT VIEW 3: QUIZ ARENA -->
-    <section id="view-student-quiz" class="hidden max-w-3xl mx-auto space-y-3 sm:space-y-6">
+    <!-- STUDENT VIEW 3: QUIZ ARENA (พร้อม Question Palette ตรวจข้อทำแล้ว/ยังไม่ทำ) -->
+    <section id="view-student-quiz" class="hidden max-w-3xl mx-auto space-y-4 sm:space-y-6">
+      
+      <!-- Top Quiz Progress & Timer -->
       <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-2.5">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
@@ -362,13 +451,15 @@
             </div>
             <h3 id="questionText" class="text-base sm:text-xl font-bold text-slate-800 leading-snug sm:leading-relaxed"></h3>
           </div>
-          <button onclick="toggleScratchpad()" class="p-2.5 sm:p-3 bg-amber-50 active:bg-amber-100 text-amber-700 rounded-xl sm:rounded-2xl transition border border-amber-200 flex-shrink-0">
+          <button onclick="toggleScratchpad()" class="p-2.5 sm:p-3 bg-amber-50 active:bg-amber-100 text-amber-700 rounded-xl sm:rounded-2xl transition border border-amber-200 flex-shrink-0" title="เปิดกระดานทดเลข">
             <i class="fa-solid fa-pencil text-base sm:text-lg"></i>
           </button>
         </div>
 
+        <!-- Options Container -->
         <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 pt-1"></div>
 
+        <!-- Explanation Box in practice mode -->
         <div id="explanationBox" class="hidden rounded-xl sm:rounded-2xl p-4 bg-slate-50 border border-slate-200 space-y-1.5">
           <div class="flex items-center gap-2 font-bold text-xs sm:text-sm" id="feedbackTitle">
             <i class="fa-solid fa-circle-check text-emerald-500"></i>
@@ -377,26 +468,51 @@
           <p id="explanationText" class="text-xs sm:text-sm text-slate-600 leading-relaxed"></p>
         </div>
 
+        <!-- Navigation Buttons -->
         <div class="flex items-center justify-between pt-3 border-t border-slate-100">
           <button id="prevBtn" onclick="navigateQuestion(-1)" class="touch-btn px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs active:bg-slate-50 transition flex items-center gap-1.5 disabled:opacity-30 disabled:pointer-events-none">
             <i class="fa-solid fa-chevron-left"></i>
             <span>ข้อก่อนหน้า</span>
           </button>
+
           <div class="flex items-center gap-2">
             <button id="nextBtn" onclick="navigateQuestion(1)" class="touch-btn px-5 sm:px-6 py-2 rounded-xl bg-indigo-600 active:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-100 transition flex items-center gap-1.5">
               <span>ข้อถัดไป</span>
               <i class="fa-solid fa-chevron-right"></i>
             </button>
-            <button id="finishBtn" onclick="submitQuiz()" class="touch-btn hidden px-5 sm:px-6 py-2 rounded-xl bg-emerald-600 active:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-100 transition flex items-center gap-1.5">
+            <button id="finishBtn" onclick="submitQuizWithVerification()" class="touch-btn hidden px-5 sm:px-6 py-2 rounded-xl bg-emerald-600 active:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-100 transition flex items-center gap-1.5">
               <i class="fa-solid fa-check"></i>
               <span>ส่งคำตอบ</span>
             </button>
           </div>
         </div>
       </div>
+
+      <!-- ================= QUESTION PALETTE (แถบตัวเลขข้อด้านล่าง ตรวจข้อทำแล้ว/ยังไม่ทำ) ================= -->
+      <div class="glass-card rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-table-cells text-indigo-600 text-sm"></i>
+            <h4 class="font-bold text-slate-800 text-xs sm:text-sm">แผนผังข้อสอบทั้งหมด (Question Palette)</h4>
+          </div>
+          <div class="flex items-center gap-3 text-[11px] font-bold">
+            <span class="flex items-center gap-1 text-emerald-700">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> ทำแล้ว (<span id="paletteAnsweredCount">0</span>)
+            </span>
+            <span class="flex items-center gap-1 text-slate-700">
+              <span class="w-3 h-3 rounded-full bg-slate-800 inline-block"></span> ยังไม่ทำ (<span id="paletteUnansweredCount">0</span>)
+            </span>
+          </div>
+        </div>
+
+        <!-- Dynamic Grid of Question Buttons -->
+        <div id="questionPaletteGrid" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
     </section>
 
-    <!-- STUDENT VIEW 4: QUIZ RESULT -->
+    <!-- STUDENT VIEW 4: RESULT -->
     <section id="view-student-result" class="hidden max-w-3xl mx-auto space-y-4 sm:space-y-6">
       <div class="glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-lg text-center space-y-4 sm:space-y-6">
         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl sm:text-4xl mx-auto shadow-sm">
@@ -404,7 +520,7 @@
         </div>
         <div>
           <h2 class="text-xl sm:text-3xl font-black text-slate-800" id="resultTitle">เก่งมาก! ทำแบบทดสอบสำเร็จ</h2>
-          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">คะแนนถูกบันทึกและส่งเข้าแดชบอร์ดคุณครูเรียบร้อยแล้ว</p>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5" id="resultSubtitle">คะแนนถูกบันทึกและส่งต่อไปยังคุณครูเรียบร้อยแล้ว</p>
         </div>
 
         <div class="grid grid-cols-3 gap-2.5 sm:gap-4 max-w-md mx-auto">
@@ -477,133 +593,278 @@
     </section>
   </main>
 
-  <!-- ================= TEACHER DASHBOARD PORTAL ================= -->
-  <main id="teacherAppContainer" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 hidden space-y-6">
-    
-    <!-- Teacher Header Banner -->
-    <div class="relative overflow-hidden rounded-3xl gradient-teacher text-white p-6 sm:p-8 shadow-2xl">
-      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="space-y-2">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-xs font-bold">
-            <i class="fa-solid fa-chalkboard-user"></i>
-            <span>ระบบครูผู้สอน • Teacher Monitoring & Item Bank Management</span>
+  <!-- ========================================================================= -->
+  <!-- MODALS & TOOLS                                                            -->
+  <!-- ========================================================================= -->
+
+  <!-- MODAL 1: QUESTION ITEM BANK MANAGER & IN-APP LIVE EDITOR (ครูแก้ไขข้อสอบทั้งหมดได้) -->
+  <div id="questionManagerModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-pen-ruler"></i>
           </div>
-          <h2 class="text-2xl sm:text-3xl font-black text-white">
-            ห้องควบคุมและมอนิเตอร์ผู้เรียน (Teacher Portal)
-          </h2>
-          <p class="text-slate-300 text-xs sm:text-sm max-w-xl">
-            ยินดีต้อนรับ <strong id="teacherGreetingName" class="text-amber-300">ครูสมศรี</strong>! สามารถมอนิเตอร์คะแนน, ให้ฟีดแบคเด็กเป็นรายบุคคล และเพิ่มข้อสอบใหม่เข้าคลังได้ทันที
-          </p>
-        </div>
-
-        <!-- Teacher Quick Actions -->
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="openAddQuestionModal()" class="touch-btn px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs shadow-md transition flex items-center gap-1.5">
-            <i class="fa-solid fa-plus-circle"></i>
-            <span>+ เพิ่มข้อสอบใหม่เข้าคลัง</span>
-          </button>
-          <button onclick="exportClassroomCSV()" class="touch-btn px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold text-xs transition flex items-center gap-1.5">
-            <i class="fa-solid fa-file-excel text-emerald-400"></i>
-            <span>ส่งออก Excel/CSV</span>
-          </button>
-          <button onclick="generateDemoClassroom()" class="touch-btn px-3 py-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold text-xs hover:bg-amber-500/30 transition">
-            <i class="fa-solid fa-dice"></i> จำลอง นร. ในห้อง
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Classroom KPIs -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-      <div class="glass-card rounded-2xl p-4 shadow-sm border-t-4 border-indigo-500">
-        <div class="text-xs font-bold text-slate-500">จำนวนนักเรียนในระบบ</div>
-        <div class="text-2xl sm:text-3xl font-black text-slate-800 mt-1" id="tKpiTotalStudents">0</div>
-        <div class="text-[11px] text-indigo-600 mt-0.5">คน</div>
-      </div>
-      <div class="glass-card rounded-2xl p-4 shadow-sm border-t-4 border-emerald-500">
-        <div class="text-xs font-bold text-slate-500">คะแนนเฉลี่ยทั้งห้อง (NT Avg)</div>
-        <div class="text-2xl sm:text-3xl font-black text-emerald-600 mt-1" id="tKpiClassAvg">0%</div>
-        <div class="text-[11px] text-slate-500 mt-0.5">เกณฑ์มาตรฐาน 80%</div>
-      </div>
-      <div class="glass-card rounded-2xl p-4 shadow-sm border-t-4 border-blue-500">
-        <div class="text-xs font-bold text-slate-500">จำนวนข้อสอบในคลัง</div>
-        <div class="text-2xl sm:text-3xl font-black text-blue-600 mt-1" id="tKpiTotalQuestions">105</div>
-        <div class="text-[11px] text-slate-500 mt-0.5">ข้อ (พร้อมใช้งาน 2 ภาษา)</div>
-      </div>
-      <div class="glass-card rounded-2xl p-4 shadow-sm border-t-4 border-rose-500">
-        <div class="text-xs font-bold text-slate-500">นักเรียนที่ควรเสริมทักษะ</div>
-        <div class="text-2xl sm:text-3xl font-black text-rose-600 mt-1" id="tKpiNeedHelp">0</div>
-        <div class="text-[11px] text-rose-500 mt-0.5">คะแนนเฉลี่ย &lt; 60%</div>
-      </div>
-    </div>
-
-    <!-- Class Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-      <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col">
-        <div class="flex items-center justify-between mb-2">
           <div>
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
-              <i class="fa-solid fa-spider text-indigo-600"></i>
-              <span>Classroom Competency Spider Chart</span>
-            </h3>
-            <p class="text-[11px] text-slate-500">ค่าเฉลี่ยสมรรถนะทั้งห้องเรียน 6 ด้าน vs เกณฑ์ 80%</p>
+            <h3 class="font-extrabold text-slate-800 text-base">คลังข้อสอบ & แก้ไขข้อสอบทั้งหมด (Question Editor)</h3>
+            <p class="text-xs text-slate-500">ค้นหา, แก้ไขโจทย์/ตัวเลือก/เฉลย ทุกข้อได้ทันที หรือนำเข้าไฟล์ Excel/Word</p>
           </div>
         </div>
-        <div class="flex-grow flex items-center justify-center w-full h-[260px] sm:h-[300px] relative">
-          <canvas id="teacherClassRadarChart"></canvas>
+        <button onclick="closeQuestionManagerModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Controls & Bulk Tools -->
+      <div class="flex flex-wrap items-center justify-between gap-2.5 pt-1">
+        <div class="flex items-center gap-2 flex-grow max-w-md">
+          <input type="text" id="qSearchInput" oninput="filterQuestionManagerList()" placeholder="พิมพ์ค้นหาโจทย์ หรือ หมายเลขข้อ..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <select id="qCategoryFilter" onchange="filterQuestionManagerList()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 bg-white">
+            <option value="all">ทุกหมวดหมู่</option>
+            <option value="num">จำนวนและแบบรูป</option>
+            <option value="ops">การคำนวณพื้นฐาน</option>
+            <option value="frac">เศษส่วน</option>
+            <option value="meas">การวัด เวลา เงิน</option>
+            <option value="geo">เรขาคณิต สมมาตร</option>
+            <option value="data">การจัดการข้อมูล</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openBulkImportModal()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-file-excel text-emerald-600"></i>
+            <span>นำเข้า Excel/Word Template</span>
+          </button>
+          <button onclick="openAddNewQuestionForm()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i>
+            <span>+ สร้างข้อใหม่</span>
+          </button>
         </div>
       </div>
 
-      <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col">
-        <div class="flex items-center justify-between mb-2">
-          <div>
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
-              <i class="fa-solid fa-chart-column text-blue-600"></i>
-              <span>คะแนนเฉลี่ยรายหมวดหมู่ (Topic Breakdown)</span>
-            </h3>
-            <p class="text-[11px] text-slate-500">หมวดที่ทำได้ดี vs หมวดที่ต้องจัดสอนเสริม</p>
-          </div>
-        </div>
-        <div class="flex-grow flex items-center justify-center w-full h-[260px] sm:h-[300px] relative">
-          <canvas id="teacherTopicBarChart"></canvas>
-        </div>
+      <!-- Question List Container (Scrollable) -->
+      <div class="flex-grow overflow-y-auto space-y-3 pr-1" id="questionManagerList">
+        <!-- Rendered via JS -->
       </div>
     </div>
+  </div>
 
-    <!-- Student Roster Table with Live Feedback & Spider Drilldown -->
-    <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+  <!-- MODAL 2: EDIT / ADD SINGLE QUESTION FORM -->
+  <div id="singleQuestionEditModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-extrabold text-slate-800 text-base" id="singleQModalTitle">แก้ไขข้อสอบ</h3>
+        <button onclick="closeSingleQuestionEditModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="singleQuestionForm" onsubmit="handleSaveSingleQuestion(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="editQId">
+
         <div>
-          <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-            <i class="fa-solid fa-users text-indigo-600"></i>
-            <span>รายชื่อและผลการทดสอบของผู้เรียน (Student Roster & Feedback)</span>
-          </h3>
-          <p class="text-xs text-slate-500">คลิกที่ "ให้ฟีดแบค / ดูชาร์ต" เพื่อส่งข้อความแนะนำและดูพัฒนาการรายบุคคล</p>
+          <label class="font-bold text-slate-700 block mb-1">หมวดหมู่เนื้อหา (Category):</label>
+          <select id="editQCategory" class="w-full p-2.5 rounded-xl border border-slate-200 font-semibold focus:ring-2 focus:ring-indigo-500 bg-white">
+            <option value="num">1. จำนวนและค่าประจำหลัก (Numbers & Place Value)</option>
+            <option value="ops">2. การคำนวณพื้นฐาน (Basic Operations)</option>
+            <option value="frac">3. เศษส่วน (Fractions)</option>
+            <option value="meas">4. การวัด เวลา และเงิน (Measurement, Time & Money)</option>
+            <option value="geo">5. รูปเรขาคณิตและแกนสมมาตร (2D Shapes & Symmetry)</option>
+            <option value="data">6. การจัดการข้อมูลและโจทย์ปัญหา (Data Handling)</option>
+          </select>
         </div>
-        <input type="text" id="teacherSearchInput" oninput="filterTeacherStudentTable()" placeholder="ค้นหาชื่อ หรือ เลขที่..." class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none max-w-xs">
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">โจทย์คำถามภาษาไทย (Question in Thai):</label>
+          <textarea id="editQTextTh" required rows="2" class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">โจทย์คำถามภาษาอังกฤษ (Question in English):</label>
+          <textarea id="editQTextEn" rows="2" class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+
+        <div class="space-y-2">
+          <label class="font-bold text-slate-700 block">ตัวเลือกคำตอบ 4 ตัวเลือก (ติ๊กเลือกข้อที่ถูกต้อง):</label>
+          <div class="grid grid-cols-1 gap-2">
+            <div class="flex items-center gap-2">
+              <input type="radio" name="editQCorrect" value="0" id="radOpt0" class="w-4 h-4 text-indigo-600">
+              <input type="text" id="editQOpt0" required placeholder="ตัวเลือก ก" class="flex-grow p-2 rounded-lg border border-slate-200">
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="radio" name="editQCorrect" value="1" id="radOpt1" class="w-4 h-4 text-indigo-600">
+              <input type="text" id="editQOpt1" required placeholder="ตัวเลือก ข" class="flex-grow p-2 rounded-lg border border-slate-200">
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="radio" name="editQCorrect" value="2" id="radOpt2" class="w-4 h-4 text-indigo-600">
+              <input type="text" id="editQOpt2" required placeholder="ตัวเลือก ค" class="flex-grow p-2 rounded-lg border border-slate-200">
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="radio" name="editQCorrect" value="3" id="radOpt3" class="w-4 h-4 text-indigo-600">
+              <input type="text" id="editQOpt3" required placeholder="ตัวเลือก ง" class="flex-grow p-2 rounded-lg border border-slate-200">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">คำอธิบายวิธีคิด (Explanation):</label>
+          <input type="text" id="editQExplanation" placeholder="คำอธิบายสั้นๆ" class="w-full p-2.5 rounded-xl border border-slate-200">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeSingleQuestionEditModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold">
+            ยกเลิก
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md transition">
+            <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อสอบ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: BULK IMPORT EXCEL / CSV / WORD TEMPLATE -->
+  <div id="bulkImportModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-file-import"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-800 text-base">นำเข้าข้อสอบจำนวนมาก (Bulk Question Import)</h3>
+            <p class="text-xs text-slate-500">ดาวน์โหลด Template ไปพิมพ์ข้อสอบ แล้วอัปโหลดกลับเข้ามาในระบบ</p>
+          </div>
+        </div>
+        <button onclick="closeBulkImportModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
 
-      <div class="overflow-x-auto rounded-xl border border-slate-200">
-        <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
-          <thead class="bg-slate-50 text-slate-600 font-bold">
-            <tr>
-              <th class="py-3 px-3 sm:px-4">เลขที่</th>
-              <th class="py-3 px-3 sm:px-4">ชื่อ - นามสกุล</th>
-              <th class="py-3 px-3 sm:px-4">ห้อง</th>
-              <th class="py-3 px-3 sm:px-4 text-center">ข้อที่ทำ</th>
-              <th class="py-3 px-3 sm:px-4 text-center">ความแม่นยำ</th>
-              <th class="py-3 px-3 sm:px-4 text-center">จุดที่ต้องพัฒนา</th>
-              <th class="py-3 px-3 sm:px-4 text-center">ฟีดแบคจากครู</th>
-              <th class="py-3 px-3 sm:px-4 text-center">การจัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="teacherRosterTbody" class="divide-y divide-slate-100 bg-white font-medium text-slate-700"></tbody>
-        </table>
+      <!-- Step 1: Download Template -->
+      <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="font-bold text-xs text-slate-800">ขั้นตอนที่ 1: ดาวน์โหลดไฟล์ Template มาตรฐาน</div>
+          <button onclick="downloadQuestionTemplateCSV()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-download"></i> ดาวน์โหลด Excel/CSV Template
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-500">ไฟล์ประกอบด้วยคอลัมน์: Category_ID, Question_TH, Question_EN, Choice_A, Choice_B, Choice_C, Choice_D, Correct_Choice (A,B,C,D), Explanation</p>
+      </div>
+
+      <!-- Step 2: Upload File -->
+      <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-2.5">
+        <div class="font-bold text-xs text-emerald-900">ขั้นตอนที่ 2: อัปโหลดไฟล์ Excel (.xlsx) หรือ .csv ที่กรอกข้อสอบแล้ว</div>
+        <input type="file" id="bulkFileInput" accept=".csv, .xlsx, .xls" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
+      </div>
+
+      <!-- Step 3 (Optional): Copy-paste Word text -->
+      <div class="space-y-1.5">
+        <label class="font-bold text-slate-700 text-xs block">หรือ วางข้อความจาก Word ตามรูปแบบ:</label>
+        <textarea id="bulkWordText" rows="4" placeholder="[Q] 45 + 50 เท่ากับเท่าใด&#10;[A] 85&#10;[B] 95*&#10;[C] 100&#10;[D] 90&#10;[EXP] 45 + 50 = 95" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-mono"></textarea>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-2">
+        <button onclick="closeBulkImportModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs">
+          ยกเลิก
+        </button>
+        <button onclick="processBulkImport()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
+          <i class="fa-solid fa-cloud-arrow-up"></i> ประมวลผล & บันทึกเข้าคลัง
+        </button>
       </div>
     </div>
-  </main>
+  </div>
 
-  <!-- ================= MODAL: TEACHER GIVE FEEDBACK & DRILLDOWN ================= -->
+  <!-- MODAL 4: GOOGLE SHEETS CONFIGURATION (รับผลสอบอัตโนมัติ) -->
+  <div id="googleSheetsConfigModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-table"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-800 text-base">เชื่อมต่อ Google Sheets รับผลสอบสด</h3>
+            <p class="text-xs text-slate-500">นักเรียนส่งข้อสอบปุ๊บ คะแนนจะถูกบันทึกลงตารางทันที</p>
+          </div>
+        </div>
+        <button onclick="closeGoogleSheetsConfigModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Google Apps Script Web App URL (Webhook):</label>
+          <input type="url" id="googleSheetWebhookUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <div class="font-bold text-slate-700 flex items-center justify-between">
+            <span>โค้ด Google Apps Script (คัดลอกไปวางในชีต):</span>
+            <button onclick="copyAppsScriptCode()" class="text-indigo-600 font-bold hover:underline">
+              <i class="fa-regular fa-copy"></i> คัดลอกโค้ด
+            </button>
+          </div>
+          <textarea id="appsScriptCodeBlock" readonly rows="5" class="w-full p-2 rounded-lg bg-slate-800 text-emerald-400 font-mono text-[10px]">function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  sheet.appendRow([new Date(), data.student_name, data.room, data.no, data.score, data.total, data.accuracy + '%', JSON.stringify(data.scores)]);
+  return ContentService.createTextOutput(JSON.stringify({result: 'success'})).setMimeType(ContentService.MimeType.JSON);
+}</textarea>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-2">
+        <button onclick="closeGoogleSheetsConfigModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs">
+          ปิด
+        </button>
+        <button onclick="saveGoogleSheetsConfig()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition">
+          <i class="fa-solid fa-floppy-disk"></i> บันทึกการเชื่อมต่อ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: ADD STUDENT & GEN MAGIC LINK -->
+  <div id="addStudentModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-extrabold text-slate-800 text-base">เพิ่มนักเรียนเข้าสู่ห้องเรียน</h3>
+        <button onclick="closeAddStudentModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleAddNewStudent(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">ชื่อ - นามสกุล นักเรียน:</label>
+          <input type="text" id="newStudentName" required placeholder="เช่น ด.ช. ธนกร มั่นคง" class="w-full p-2.5 rounded-xl border border-slate-200">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">เลขที่ (No.):</label>
+            <input type="text" id="newStudentNo" required placeholder="เช่น 9" class="w-full p-2.5 rounded-xl border border-slate-200">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">ห้องเรียน (Room):</label>
+            <input type="text" id="newStudentRoom" value="ป.3/1" class="w-full p-2.5 rounded-xl border border-slate-200">
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeAddStudentModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold">
+            ยกเลิก
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold shadow-md hover:bg-indigo-700 transition">
+            บันทึก & สร้าง Magic Link
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 6: TEACHER FEEDBACK & INDIVIDUAL DRILLDOWN -->
   <div id="teacherFeedbackModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -619,7 +880,6 @@
         </button>
       </div>
 
-      <!-- Student Radar Chart in Modal -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
         <div class="h-60 relative flex items-center justify-center">
           <canvas id="modalStudentRadarChart"></canvas>
@@ -630,17 +890,16 @@
             <div class="flex justify-between"><span>ทำข้อสอบไปแล้ว:</span> <strong id="modalTotalQ">0 ข้อ</strong></div>
             <div class="flex justify-between"><span>ความแม่นยำรวม:</span> <strong id="modalAccuracy" class="text-emerald-600">0%</strong></div>
           </div>
-          <!-- Teacher feedback input form -->
           <div class="space-y-1.5">
             <label class="font-bold text-slate-700 block">เขียนฟีดแบค / คำแนะนำถึงนักเรียนคนนี้:</label>
-            <textarea id="modalFeedbackInput" rows="3" placeholder="เช่น ทำคะแนนการบวกเลขได้ดีมาก แต่ควรทบทวนเรื่องการแปลงหน่วยความยาวอีกครั้งนะจ๊ะ" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+            <textarea id="modalFeedbackInput" rows="3" placeholder="พิมพ์ฟีดแบคส่งตรงถึงหน้าจอเด็ก..." class="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
           </div>
         </div>
       </div>
 
       <div class="pt-2 flex justify-end gap-2">
         <button onclick="closeTeacherFeedbackModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs">
-          ยกเลิก
+          ปิด
         </button>
         <button onclick="saveStudentFeedback()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition">
           <i class="fa-solid fa-paper-plane"></i> บันทึก & ส่งฟีดแบค
@@ -649,87 +908,37 @@
     </div>
   </div>
 
-  <!-- ================= MODAL: TEACHER ADD NEW QUESTION ================= -->
-  <div id="addQuestionModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
-    <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+  <!-- MODAL 7: EDIT STUDENT PROFILE (FOR STUDENTS) -->
+  <div id="editStudentProfileModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <div class="flex items-center gap-2">
-          <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
-            <i class="fa-solid fa-file-circle-plus"></i>
-          </div>
-          <div>
-            <h3 class="font-extrabold text-slate-800 text-base">เพิ่มข้อสอบใหม่เข้าสู่ระบบ</h3>
-            <p class="text-xs text-slate-500">ข้อสอบใหม่จะถูกนำไปให้นักเรียนทุกคนฝึกทำทันที</p>
-          </div>
-        </div>
-        <button onclick="closeAddQuestionModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+        <h3 class="font-extrabold text-slate-800 text-base">แก้ไขข้อมูลส่วนตัวของคุณ</h3>
+        <button onclick="closeEditStudentProfileModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-
-      <form id="addQuestionForm" onsubmit="handleAddNewQuestion(event)" class="space-y-3.5 text-xs">
+      <form onsubmit="handleSaveStudentSelfProfile(event)" class="space-y-3 text-xs">
         <div>
-          <label class="font-bold text-slate-700 block mb-1">หมวดหมู่เนื้อหา (Category):</label>
-          <select id="newQCategory" class="w-full p-2.5 rounded-xl border border-slate-200 font-semibold focus:ring-2 focus:ring-indigo-500 bg-white">
-            <option value="num">1. จำนวนและค่าประจำหลัก (Numbers & Place Value)</option>
-            <option value="ops">2. การคำนวณพื้นฐาน (Basic Operations)</option>
-            <option value="frac">3. เศษส่วน (Fractions)</option>
-            <option value="meas">4. การวัด เวลา และเงิน (Measurement, Time & Money)</option>
-            <option value="geo">5. รูปเรขาคณิตและแกนสมมาตร (2D Shapes & Symmetry)</option>
-            <option value="data">6. การจัดการข้อมูลและโจทย์ปัญหา (Data Handling)</option>
-          </select>
+          <label class="font-bold text-slate-700 block mb-1">เลือก Avatar ประจำตัว:</label>
+          <div class="grid grid-cols-6 gap-2" id="studentAvatarPicker"></div>
         </div>
-
         <div>
-          <label class="font-bold text-slate-700 block mb-1">โจทย์คำถามภาษาไทย (Question in Thai):</label>
-          <textarea id="newQTextTh" required rows="2" placeholder="เช่น แม่ค้ามีมะม่วง 45 ผล ขายไป 15 ผล..." class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500"></textarea>
+          <label class="font-bold text-slate-700 block mb-1">ชื่อ - นามสกุล หรือ ชื่อเล่น:</label>
+          <input type="text" id="editStudentSelfName" required class="w-full p-2.5 rounded-xl border border-slate-200">
         </div>
-
-        <div>
-          <label class="font-bold text-slate-700 block mb-1">โจทย์คำถามภาษาอังกฤษ (Question in English - Optional):</label>
-          <textarea id="newQTextEn" rows="2" placeholder="e.g. A seller has 45 mangoes and sells 15..." class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500"></textarea>
-        </div>
-
-        <div class="space-y-2">
-          <label class="font-bold text-slate-700 block">ตัวเลือกคำตอบ 4 ตัวเลือก (กำหนดข้อที่ถูก):</label>
-          <div class="grid grid-cols-1 gap-2">
-            <div class="flex items-center gap-2">
-              <input type="radio" name="newQCorrect" value="0" checked class="w-4 h-4 text-indigo-600">
-              <input type="text" id="newQOpt0" required placeholder="ตัวเลือก ก (คำตอบที่ถูกต้อง)" class="flex-grow p-2 rounded-lg border border-slate-200">
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="radio" name="newQCorrect" value="1" class="w-4 h-4 text-indigo-600">
-              <input type="text" id="newQOpt1" required placeholder="ตัวเลือก ข (ตัวลวง 1)" class="flex-grow p-2 rounded-lg border border-slate-200">
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="radio" name="newQCorrect" value="2" class="w-4 h-4 text-indigo-600">
-              <input type="text" id="newQOpt2" required placeholder="ตัวเลือก ค (ตัวลวง 2)" class="flex-grow p-2 rounded-lg border border-slate-200">
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="radio" name="newQCorrect" value="3" class="w-4 h-4 text-indigo-600">
-              <input type="text" id="newQOpt3" required placeholder="ตัวเลือก ง (ตัวลวง 3)" class="flex-grow p-2 rounded-lg border border-slate-200">
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label class="font-bold text-slate-700 block mb-1">คำอธิบายวิธีคิด (Explanation):</label>
-          <input type="text" id="newQExplanation" placeholder="เช่น 45 - 15 = 30 ผล" class="w-full p-2.5 rounded-xl border border-slate-200">
-        </div>
-
         <div class="pt-2 flex justify-end gap-2">
-          <button type="button" onclick="closeAddQuestionModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold">
+          <button type="button" onclick="closeEditStudentProfileModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold">
             ยกเลิก
           </button>
-          <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md transition">
-            <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อสอบเข้าคลัง
+          <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold shadow-md hover:bg-indigo-700">
+            บันทึก
           </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- ================= TOUCH SCRATCHPAD MODAL ================= -->
+  <!-- MODAL 8: TOUCH SCRATCHPAD -->
   <div id="scratchpadModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
     <div class="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl flex flex-col space-y-3">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
@@ -755,12 +964,14 @@
     </div>
   </div>
 
-  <!-- ================= CORE JAVASCRIPT & DATABASE ENGINE ================= -->
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT LOGIC & ENGINE                                                 -->
+  <!-- ========================================================================= -->
   <script>
-    // 1. Injected Question Bank (105+ questions)
+    // 1. Questions Bank
     let questions = [{"id": 1, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "เลขโดดที่ขีดเส้นใต้ของจำนวน 6<u>7</u>,420 มีค่าประจำหลักและค่าของเลขโดดเท่าใด", "question_en": "What is the place value and the value of the underlined digit in 6<u>7</u>,420?", "options_th": ["หลักพัน มีค่า 7,000", "หลักหมื่น มีค่า 70,000", "หลักร้อย มีค่า 700", "หลักสิบ มีค่า 70"], "options_en": ["Thousands place, value is 7,000", "Ten thousands place, value is 70,000", "Hundreds place, value is 700", "Tens place, value is 70"], "answer": 0, "explanation_th": "เลข 7 อยู่ในหลักพัน จึงมีค่าประจำหลักคือหลักพัน และมีค่าเท่ากับ 7,000", "explanation_en": "The digit 7 is in the thousands place, so its value is 7,000."}, {"id": 2, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "จำนวน 'แปดหมื่นเก้าสิบห้า' เขียนในรูปกระจายได้อย่างไร", "question_en": "How is 'eighty thousand and ninety-five' written in expanded form?", "options_th": ["80,000 + 90 + 5", "80,000 + 900 + 5", "8,000 + 90 + 5", "80,000 + 900 + 50"], "options_en": ["80,000 + 90 + 5", "80,000 + 900 + 5", "8,000 + 90 + 5", "80,000 + 900 + 50"], "answer": 0, "explanation_th": "แปดหมื่นเก้าสิบห้า คือ 80,095 เขียนในรูปกระจายได้เป็น 80,000 + 90 + 5", "explanation_en": "Eighty thousand and ninety-five is 80,095 = 80,000 + 90 + 5."}, {"id": 3, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "ข้อใดเปรียบเทียบจำนวนได้ถูกต้อง", "question_en": "Which of the following comparison statements is correct?", "options_th": ["45,890 < 45,980", "70,123 < 69,999", "34,560 > 34,650", "81,020 < 80,999"], "options_en": ["45,890 < 45,980", "70,123 < 69,999", "34,560 > 34,650", "81,020 < 80,999"], "answer": 0, "explanation_th": "45,890 มีค่าน้อยกว่า 45,980 เนื่องจากหลักร้อย 8 น้อยกว่า 9", "explanation_en": "45,890 is less than 45,980 because 8 hundreds is less than 9 hundreds."}, {"id": 4, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "เรียงลำดับจำนวนจากมากไปน้อย: 34,560, 34,650, 34,056, 34,506", "question_en": "Order the numbers in descending order (greatest to least): 34,560, 34,650, 34,056, 34,506", "options_th": ["34,650 > 34,560 > 34,506 > 34,056", "34,650 > 34,506 > 34,560 > 34,056", "34,056 > 34,506 > 34,560 > 34,650", "34,560 > 34,650 > 34,506 > 34,056"], "options_en": ["34,650 > 34,560 > 34,506 > 34,056", "34,650 > 34,506 > 34,560 > 34,056", "34,056 > 34,506 > 34,560 > 34,650", "34,560 > 34,650 > 34,506 > 34,056"], "answer": 0, "explanation_th": "เปรียบเทียบจากหลักพันและหลักร้อย: 34,650 มากที่สุด ตามด้วย 34,560, 34,506 และ 34,056", "explanation_en": "Comparing hundreds place: 34,650 is largest, followed by 34,560, 34,506, and 34,056."}, {"id": 5, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "ตัวเลข 5 ในจำนวน 53,210 กับตัวเลข 5 ในจำนวน 35,420 มีค่าต่างกันเท่าใด", "question_en": "What is the difference between the value of digit 5 in 53,210 and in 35,420?", "options_th": ["45,000", "50,000", "5,000", "40,000"], "options_en": ["45,000", "50,000", "5,000", "40,000"], "answer": 0, "explanation_th": "5 ใน 53,210 มีค่า 50,000 และ 5 ใน 35,420 มีค่า 5,000 ดังนั้นผลต่างคือ 50,000 - 5,000 = 45,000", "explanation_en": "5 in 53,210 is 50,000 and in 35,420 is 5,000. Difference = 50,000 - 5,000 = 45,000."}, {"id": 6, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "กำหนดแบบรูป: 125, 130, 135, A, 145, B จงหาค่าของ A + B", "question_en": "Given the number sequence: 125, 130, 135, A, 145, B. What is the value of A + B?", "options_th": ["290", "285", "295", "300"], "options_en": ["290", "285", "295", "300"], "answer": 0, "explanation_th": "แบบรูปเพิ่มขึ้นทีละ 5 ดังนั้น A = 140, B = 150 รวมกัน A + B = 140 + 150 = 290", "explanation_en": "The rule is +5. Thus A = 140, B = 150. A + B = 140 + 150 = 290."}, {"id": 7, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "กำหนดแบบรูป: 1,200, 1,150, 1,100, 1,050, ... จำนวนถัดไปอีก 2 จำนวนคือจำนวนใด", "question_en": "Given the sequence: 1,200, 1,150, 1,100, 1,050, ... What are the next two numbers?", "options_th": ["1,000 และ 950", "1,000 และ 900", "950 และ 900", "1,050 และ 1,000"], "options_en": ["1,000 and 950", "1,000 and 900", "950 and 900", "1,050 and 1,000"], "answer": 0, "explanation_th": "แบบรูปลดลงทีละ 50 จำนวนถัดไปคือ 1,000 และ 950", "explanation_en": "The rule is subtracting 50 each time. The next numbers are 1,000 and 950."}, {"id": 8, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "กำหนดแบบรูป: 2, 4, 8, 16, 32, ... จำนวนที่อยู่ถัดจาก 32 คือจำนวนใด", "question_en": "Given the sequence: 2, 4, 8, 16, 32, ... What is the number after 32?", "options_th": ["64", "48", "60", "34"], "options_en": ["64", "48", "60", "34"], "answer": 0, "explanation_th": "แบบรูปเพิ่มขึ้นเป็น 2 เท่าในแต่ละจำนวน ถัดจาก 32 คือ 32 × 2 = 64", "explanation_en": "Each term doubles the previous one. Next term = 32 × 2 = 64."}, {"id": 9, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "จำนวนห้าหลักที่มีค่ามากที่สุดซึ่งประกอบด้วยเลขโดด 4, 0, 9, 2, 7 (โดยแต่ละหลักห้ามซ้ำกัน) คือจำนวนใด", "question_en": "What is the largest 5-digit number formed using digits 4, 0, 9, 2, 7 without repeating any digit?", "options_th": ["97,420", "97,402", "94,720", "79,420"], "options_en": ["97,420", "97,402", "94,720", "79,420"], "answer": 0, "explanation_th": "เรียงเลขโดดจากมากไปน้อย: 9, 7, 4, 2, 0 ได้จำนวน 97,420", "explanation_en": "Arranging digits from highest to lowest gives 97,420."}, {"id": 10, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "จำนวนห้าหลักที่มีค่าน้อยที่สุดซึ่งประกอบด้วยเลขโดด 5, 8, 1, 0, 3 (โดยห้ามใช้เลขซ้ำกัน) คือจำนวนใด", "question_en": "What is the smallest 5-digit number formed using digits 5, 8, 1, 0, 3 without repeating any digit?", "options_th": ["10,358", "01,358", "10,385", "13,058"], "options_en": ["10,358", "01,358", "10,385", "13,058"], "answer": 0, "explanation_th": "หลักหมื่นต้องไม่ใช่ 0 จึงเริ่มด้วย 1 ตามด้วย 0, 3, 5, 8 ได้ 10,358", "explanation_en": "The leading digit cannot be 0, so start with 1, followed by 0, 3, 5, 8 = 10,358."}, {"id": 11, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "จากจำนวน 48,762 ตัวเลขในหลักพันมีค่ามากกว่าตัวเลขในหลักสิบอยู่เท่าใด", "question_en": "In the number 48,762, how much greater is the value of the thousands digit than the tens digit?", "options_th": ["7,940", "8,000", "7,960", "7,000"], "options_en": ["7,940", "8,000", "7,960", "7,000"], "answer": 0, "explanation_th": "ตัวเลขหลักพันคือ 8 (มีค่า 8,000) ตัวเลขหลักสิบคือ 6 (มีค่า 60) ผลต่างคือ 8,000 - 60 = 7,940", "explanation_en": "Thousands digit 8 = 8,000. Tens digit 6 = 60. Difference = 8,000 - 60 = 7,940."}, {"id": 12, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "แบบรูป 15, 30, 45, 60, ... จำนวนที่ 8 ของแบบรูปนี้คือจำนวนใด", "question_en": "For the sequence 15, 30, 45, 60, ... what is the 8th term?", "options_th": ["120", "105", "135", "90"], "options_en": ["120", "105", "135", "90"], "answer": 0, "explanation_th": "แบบรูปเพิ่มทีละ 15 หรือเป็นสูตรคูณแม่ 15 จำนวนที่ 8 คือ 15 × 8 = 120", "explanation_en": "The sequence is multiples of 15. The 8th term = 15 × 8 = 120."}, {"id": 13, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "จำนวนในข้อใดมีค่ามากกว่า 58,900 แต่น้อยกว่า 59,100", "question_en": "Which of the following numbers is greater than 58,900 and less than 59,100?", "options_th": ["59,050", "58,890", "59,120", "58,099"], "options_en": ["59,050", "58,890", "59,120", "58,099"], "answer": 0, "explanation_th": "59,050 อยู่ระหว่าง 58,900 และ 59,100", "explanation_en": "59,050 lies between 58,900 and 59,100."}, {"id": 14, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "จำนวน 90,000 + 4,000 + 300 + 2 เท่ากับจำนวนใด", "question_en": "What number is equal to 90,000 + 4,000 + 300 + 2?", "options_th": ["94,302", "94,320", "94,032", "90,432"], "options_en": ["94,302", "94,320", "94,032", "90,432"], "answer": 0, "explanation_th": "90,000 + 4,000 + 300 + 2 = 94,302 (หลักสิบเป็น 0)", "explanation_en": "90,000 + 4,000 + 300 + 2 = 94,302 (the tens place is 0)."}, {"id": 15, "cat_id": "num", "category_th": "จำนวนและค่าประจำหลัก", "category_en": "Numbers & Place Value", "type": "mcq", "question_th": "กำหนดแบบรูป: 540, 520, A, 480, B, 440 จงหาค่าของ A - B", "question_en": "Given sequence: 540, 520, A, 480, B, 440. What is the value of A - B?", "options_th": ["40", "20", "50", "30"], "options_en": ["40", "20", "50", "30"], "answer": 0, "explanation_th": "แบบรูปลดลงทีละ 20 จะได้ A = 500 และ B = 460 ดังนั้น A - B = 500 - 460 = 40", "explanation_en": "The sequence subtracts 20 each time. A = 500, B = 460. Difference A - B = 500 - 460 = 40."}, {"id": 16, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลบวกของ 23,456 + 14,321 มีค่าเท่าใด", "question_en": "What is the sum of 23,456 + 14,321?", "options_th": ["37,777", "37,677", "38,777", "36,777"], "options_en": ["37,777", "37,677", "38,777", "36,777"], "answer": 0, "explanation_th": "23,456 + 14,321 = 37,777", "explanation_en": "23,456 + 14,321 = 37,777"}, {"id": 17, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลบวกของ 48,795 + 35,468 มีค่าเท่าใด", "question_en": "Calculate the sum: 48,795 + 35,468", "options_th": ["84,263", "83,263", "84,163", "84,363"], "options_en": ["84,263", "83,263", "84,163", "84,363"], "answer": 0, "explanation_th": "48,795 + 35,468 = 84,263", "explanation_en": "48,795 + 35,468 = 84,263"}, {"id": 18, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลลบของ 78,650 - 34,210 มีค่าเท่าใด", "question_en": "Find the difference: 78,650 - 34,210", "options_th": ["44,440", "44,450", "43,440", "45,440"], "options_en": ["44,440", "44,450", "43,440", "45,440"], "answer": 0, "explanation_th": "78,650 - 34,210 = 44,440", "explanation_en": "78,650 - 34,210 = 44,440"}, {"id": 19, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลลบของ 50,000 - 23,456 มีค่าเท่าใด", "question_en": "Calculate: 50,000 - 23,456", "options_th": ["26,544", "27,544", "26,644", "26,554"], "options_en": ["26,544", "27,544", "26,644", "26,554"], "answer": 0, "explanation_th": "50,000 - 23,456 = 26,544", "explanation_en": "50,000 - 23,456 = 26,544"}, {"id": 20, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "หาค่าของตัวไม่ทราบค่า: □ + 15,400 = 42,600", "question_en": "Find the missing value: □ + 15,400 = 42,600", "options_th": ["27,200", "28,200", "26,200", "58,000"], "options_en": ["27,200", "28,200", "26,200", "58,000"], "answer": 0, "explanation_th": "□ = 42,600 - 15,400 = 27,200", "explanation_en": "□ = 42,600 - 15,400 = 27,200"}, {"id": 21, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "หาค่าของตัวไม่ทราบค่า: 68,900 - □ = 25,450", "question_en": "Find the missing value: 68,900 - □ = 25,450", "options_th": ["43,450", "43,550", "44,450", "94,350"], "options_en": ["43,450", "43,550", "44,450", "94,350"], "answer": 0, "explanation_th": "□ = 68,900 - 25,450 = 43,450", "explanation_en": "□ = 68,900 - 25,450 = 43,450"}, {"id": 22, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "สหกรณ์โรงเรียนขายสมุดเทอมแรกได้ 24,560 บาท เทอมที่สองได้ 31,240 บาท รวมทั้งสองเทอมได้เงินกี่บาท", "question_en": "The school store earned 24,560 Baht in the first term and 31,240 Baht in the second term. How much was earned in total?", "options_th": ["55,800 บาท", "55,700 บาท", "54,800 บาท", "56,800 บาท"], "options_en": ["55,800 บาท", "55,700 บาท", "54,800 บาท", "56,800 บาท"], "answer": 0, "explanation_th": "24,560 + 31,240 = 55,800 บาท", "explanation_en": "24,560 + 31,240 = 55,800 บาท"}, {"id": 23, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "พ่อมีเงิน 75,000 บาท ซื้อคอมพิวเตอร์ราคา 28,900 บาท พ่อจะเหลือเงินกี่บาท", "question_en": "Dad has 75,000 Baht. He buys a computer for 28,900 Baht. How much money does he have left?", "options_th": ["46,100 บาท", "47,100 บาท", "46,000 บาท", "45,100 บาท"], "options_en": ["46,100 บาท", "47,100 บาท", "46,000 บาท", "45,100 บาท"], "answer": 0, "explanation_th": "75,000 - 28,900 = 46,100 บาท", "explanation_en": "75,000 - 28,900 = 46,100 บาท"}, {"id": 24, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลคูณของ 423 × 3 มีค่าเท่าใด", "question_en": "Calculate the product: 423 × 3", "options_th": ["1,269", "1,259", "1,279", "1,249"], "options_en": ["1,269", "1,259", "1,279", "1,249"], "answer": 0, "explanation_th": "423 × 3 = 1,269", "explanation_en": "423 × 3 = 1,269"}, {"id": 25, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลคูณของ 1,205 × 6 มีค่าเท่าใด", "question_en": "What is 1,205 × 6?", "options_th": ["7,230", "7,200", "7,250", "7,330"], "options_en": ["7,230", "7,200", "7,250", "7,330"], "answer": 0, "explanation_th": "1,205 × 6 = 7,230", "explanation_en": "1,205 × 6 = 7,230"}, {"id": 26, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลคูณของ 45 × 24 มีค่าเท่าใด", "question_en": "Calculate: 45 × 24", "options_th": ["1,080", "1,050", "1,120", "980"], "options_en": ["1,080", "1,050", "1,120", "980"], "answer": 0, "explanation_th": "45 × 24 = 1,080", "explanation_en": "45 × 24 = 1,080"}, {"id": 27, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลหารของ 848 ÷ 4 มีค่าเท่าใด", "question_en": "Find the quotient: 848 ÷ 4", "options_th": ["212", "214", "222", "202"], "options_en": ["212", "214", "222", "202"], "answer": 0, "explanation_th": "848 ÷ 4 = 212", "explanation_en": "848 ÷ 4 = 212"}, {"id": 28, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลหารของ 1,575 ÷ 5 มีค่าเท่าใด", "question_en": "What is 1,575 ÷ 5?", "options_th": ["315", "325", "305", "312"], "options_en": ["315", "325", "305", "312"], "answer": 0, "explanation_th": "1,575 ÷ 5 = 315", "explanation_en": "1,575 ÷ 5 = 315"}, {"id": 29, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "หาผลหารและเศษ: 753 ÷ 6 ได้เท่าใด", "question_en": "Find the quotient and remainder: 753 ÷ 6", "options_th": ["125 เศษ 3", "125 เศษ 2", "124 เศษ 3", "126 เศษ 1"], "options_en": ["125 เศษ 3", "125 เศษ 2", "124 เศษ 3", "126 เศษ 1"], "answer": 0, "explanation_th": "753 = (6 × 125) + 3", "explanation_en": "753 = (6 × 125) + 3"}, {"id": 30, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ร้านค้ามีดินสอ 48 กล่อง กล่องละ 12 แท่ง ร้านค้ามีดินสอทั้งหมดกี่แท่ง", "question_en": "A shop has 48 boxes of pencils. Each box contains 12 pencils. How many pencils are there altogether?", "options_th": ["576 แท่ง", "586 แท่ง", "566 แท่ง", "600 แท่ง"], "options_en": ["576 แท่ง", "586 แท่ง", "566 แท่ง", "600 แท่ง"], "answer": 0, "explanation_th": "48 × 12 = 576 แท่ง", "explanation_en": "48 × 12 = 576 แท่ง"}, {"id": 31, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "โรงเรียนจัดนักเรียน 360 คน นั่งแถว แถวละ 9 คน เท่าๆ กัน จะจัดได้กี่แถว", "question_en": "A school arranges 360 students into equal rows of 9 students. How many rows are formed?", "options_th": ["40 แถว", "45 แถว", "36 แถว", "50 แถว"], "options_en": ["40 แถว", "45 แถว", "36 แถว", "50 แถว"], "answer": 0, "explanation_th": "360 ÷ 9 = 40 แถว", "explanation_en": "360 ÷ 9 = 40 แถว"}, {"id": 32, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "คำนวณหาผลลัพธ์: (120 × 8) + 450", "question_en": "Evaluate: (120 × 8) + 450", "options_th": ["1,410", "1,310", "1,450", "1,390"], "options_en": ["1,410", "1,310", "1,450", "1,390"], "answer": 0, "explanation_th": "(120 × 8) = 960; 960 + 450 = 1,410", "explanation_en": "(120 × 8) = 960; 960 + 450 = 1,410"}, {"id": 33, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "คำนวณหาผลลัพธ์: 2,500 - (350 × 4)", "question_en": "Evaluate: 2,500 - (350 × 4)", "options_th": ["1,100", "1,200", "1,000", "900"], "options_en": ["1,100", "1,200", "1,000", "900"], "answer": 0, "explanation_th": "(350 × 4) = 1,400; 2,500 - 1,400 = 1,100", "explanation_en": "(350 × 4) = 1,400; 2,500 - 1,400 = 1,100"}, {"id": 34, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "คำนวณหาผลลัพธ์: (4,800 ÷ 6) + 1,250", "question_en": "Evaluate: (4,800 ÷ 6) + 1,250", "options_th": ["2,050", "2,150", "1,950", "2,000"], "options_en": ["2,050", "2,150", "1,950", "2,000"], "answer": 0, "explanation_th": "(4,800 ÷ 6) = 800; 800 + 1,250 = 2,050", "explanation_en": "(4,800 ÷ 6) = 800; 800 + 1,250 = 2,050"}, {"id": 35, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "คำนวณหาผลลัพธ์: (1,500 + 2,700) ÷ 7", "question_en": "Evaluate: (1,500 + 2,700) ÷ 7", "options_th": ["600", "700", "550", "650"], "options_en": ["600", "700", "550", "650"], "answer": 0, "explanation_th": "1,500 + 2,700 = 4,200; 4,200 ÷ 7 = 600", "explanation_en": "1,500 + 2,700 = 4,200; 4,200 ÷ 7 = 600"}, {"id": 36, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "พ่อค้ามีส้ม 120 กก. ซื้อมาเพิ่มอีก 80 กก. นำไปแบ่งใส่ถุง ถุงละ 5 กก. จะได้กี่ถุง", "question_en": "A merchant has 120 kg of oranges, buys 80 kg more, and packs them into bags of 5 kg each. How many bags are there?", "options_th": ["40 ถุง", "35 ถุง", "50 ถุง", "45 ถุง"], "options_en": ["40 ถุง", "35 ถุง", "50 ถุง", "45 ถุง"], "answer": 0, "explanation_th": "(120 + 80) ÷ 5 = 200 ÷ 5 = 40 ถุง", "explanation_en": "(120 + 80) ÷ 5 = 200 ÷ 5 = 40 ถุง"}, {"id": 37, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "นารีซื้อสมุด 15 เล่ม เล่มละ 12 บาท และซื้อปากกา 85 บาท ให้ธนบัตร 500 บาท จะได้เงินทอนกี่บาท", "question_en": "Naree buys 15 notebooks at 12 Baht each and a pen for 85 Baht. She pays with a 500-Baht note. How much change does she receive?", "options_th": ["235 บาท", "245 บาท", "225 บาท", "255 บาท"], "options_en": ["235 บาท", "245 บาท", "225 บาท", "255 บาท"], "answer": 0, "explanation_th": "(15 × 12) + 85 = 180 + 85 = 265 บาท; เงินทอน = 500 - 265 = 235 บาท", "explanation_en": "(15 × 12) + 85 = 180 + 85 = 265 บาท; เงินทอน = 500 - 265 = 235 บาท"}, {"id": 38, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ครูมีดินสอ 6 กล่อง กล่องละ 50 แท่ง แจกให้นักเรียน 10 คน คนละเท่าๆ กัน จะได้คนละกี่แท่ง", "question_en": "A teacher has 6 boxes of pencils with 50 pencils in each box. She distributes them equally among 10 students. How many pencils does each student receive?", "options_th": ["30 แท่ง", "25 แท่ง", "35 แท่ง", "20 แท่ง"], "options_en": ["30 แท่ง", "25 แท่ง", "35 แท่ง", "20 แท่ง"], "answer": 0, "explanation_th": "(6 × 50) ÷ 10 = 300 ÷ 10 = 30 แท่ง", "explanation_en": "(6 × 50) ÷ 10 = 300 ÷ 10 = 30 แท่ง"}, {"id": 39, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "ผลคูณของ 78 × 36 มีค่าเท่าใด", "question_en": "Calculate the product: 78 × 36", "options_th": ["2,808", "2,708", "2,818", "2,798"], "options_en": ["2,808", "2,708", "2,818", "2,798"], "answer": 0, "explanation_th": "78 × 36 = 2,808", "explanation_en": "78 × 36 = 2,808"}, {"id": 40, "cat_id": "ops", "category_th": "การคำนวณพื้นฐาน", "category_en": "Basic Operations", "type": "mcq", "question_th": "คำนวณหาผลลัพธ์: 80,000 - (34,500 + 26,700)", "question_en": "Evaluate: 80,000 - (34,500 + 26,700)", "options_th": ["18,800", "19,800", "17,800", "18,200"], "options_en": ["18,800", "19,800", "17,800", "18,200"], "answer": 0, "explanation_th": "34,500 + 26,700 = 61,200; 80,000 - 61,200 = 18,800", "explanation_en": "34,500 + 26,700 = 61,200; 80,000 - 61,200 = 18,800"}, {"id": 41, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "วงกลมแบ่งออกเป็น 8 ส่วนเท่ากัน ระบายสีไป 5 ส่วน เขียนเป็นเศษส่วนแสดงส่วนที่ระบายสีได้อย่างไร", "question_en": "A circle is divided into 8 equal parts. 5 parts are shaded. What fraction represents the shaded part?", "options_th": ["5/8", "3/8", "5/3", "8/5"], "options_en": ["5/8", "3/8", "5/3", "8/5"], "answer": 0, "explanation_th": "ตัวเศษคือส่วนที่ระบายสี (5) ตัวส่วนคือส่วนทั้งหมด (8) คือ 5/8", "explanation_en": "ตัวเศษคือส่วนที่ระบายสี (5) ตัวส่วนคือส่วนทั้งหมด (8) คือ 5/8"}, {"id": 42, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "เปรียบเทียบเศษส่วน: 3/7 กับ 5/7 ข้อใดถูกต้อง", "question_en": "Compare fractions: 3/7 and 5/7. Which statement is correct?", "options_th": ["3/7 < 5/7", "3/7 > 5/7", "3/7 = 5/7", "ไม่สามารถเปรียบเทียบได้"], "options_en": ["3/7 < 5/7", "3/7 > 5/7", "3/7 = 5/7", "ไม่สามารถเปรียบเทียบได้"], "answer": 0, "explanation_th": "เมื่อตัวส่วนเท่ากัน ตัวเศษ 3 น้อยกว่า 5 ดังนั้น 3/7 < 5/7", "explanation_en": "เมื่อตัวส่วนเท่ากัน ตัวเศษ 3 น้อยกว่า 5 ดังนั้น 3/7 < 5/7"}, {"id": 43, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "เปรียบเทียบเศษส่วน: 4/9 กับ 4/12 ข้อใดถูกต้อง", "question_en": "Compare fractions: 4/9 and 4/12. Which statement is correct?", "options_th": ["4/9 > 4/12", "4/9 < 4/12", "4/9 = 4/12", "4/9 + 4/12 = 1"], "options_en": ["4/9 > 4/12", "4/9 < 4/12", "4/9 = 4/12", "4/9 + 4/12 = 1"], "answer": 0, "explanation_th": "เมื่อตัวเศษเท่ากัน ตัวส่วนน้อยกว่าจะมีค่ามากกว่า ดังนั้น 4/9 > 4/12", "explanation_en": "เมื่อตัวเศษเท่ากัน ตัวส่วนน้อยกว่าจะมีค่ามากกว่า ดังนั้น 4/9 > 4/12"}, {"id": 44, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "เรียงลำดับเศษส่วนจากน้อยไปมาก: 5/11, 2/11, 9/11, 7/11", "question_en": "Order the fractions in ascending order: 5/11, 2/11, 9/11, 7/11", "options_th": ["2/11, 5/11, 7/11, 9/11", "9/11, 7/11, 5/11, 2/11", "2/11, 7/11, 5/11, 9/11", "5/11, 2/11, 7/11, 9/11"], "options_en": ["2/11, 5/11, 7/11, 9/11", "9/11, 7/11, 5/11, 2/11", "2/11, 7/11, 5/11, 9/11", "5/11, 2/11, 7/11, 9/11"], "answer": 0, "explanation_th": "เรียงตามตัวเศษจากน้อยไปมาก: 2/11, 5/11, 7/11, 9/11", "explanation_en": "เรียงตามตัวเศษจากน้อยไปมาก: 2/11, 5/11, 7/11, 9/11"}, {"id": 45, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "เรียงลำดับเศษส่วนจากมากไปน้อย: 6/15, 6/8, 6/10, 6/7", "question_en": "Order the fractions in descending order: 6/15, 6/8, 6/10, 6/7", "options_th": ["6/7, 6/8, 6/10, 6/15", "6/15, 6/10, 6/8, 6/7", "6/7, 6/10, 6/8, 6/15", "6/8, 6/7, 6/10, 6/15"], "options_en": ["6/7, 6/8, 6/10, 6/15", "6/15, 6/10, 6/8, 6/7", "6/7, 6/10, 6/8, 6/15", "6/8, 6/7, 6/10, 6/15"], "answer": 0, "explanation_th": "เมื่อตัวเศษเท่ากัน ตัวส่วนน้อยสุดจะมีค่ามากที่สุด: 6/7 > 6/8 > 6/10 > 6/15", "explanation_en": "เมื่อตัวเศษเท่ากัน ตัวส่วนน้อยสุดจะมีค่ามากที่สุด: 6/7 > 6/8 > 6/10 > 6/15"}, {"id": 46, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "หาผลบวกของ 2/8 + 5/8", "question_en": "Calculate the sum: 2/8 + 5/8", "options_th": ["7/8", "7/16", "3/8", "1"], "options_en": ["7/8", "7/16", "3/8", "1"], "answer": 0, "explanation_th": "2/8 + 5/8 = (2+5)/8 = 7/8", "explanation_en": "2/8 + 5/8 = (2+5)/8 = 7/8"}, {"id": 47, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "หาผลลบของ 9/10 - 4/10", "question_en": "Calculate the difference: 9/10 - 4/10", "options_th": ["5/10", "13/10", "5/0", "5/20"], "options_en": ["5/10", "13/10", "5/0", "5/20"], "answer": 0, "explanation_th": "9/10 - 4/10 = (9-4)/10 = 5/10", "explanation_en": "9/10 - 4/10 = (9-4)/10 = 5/10"}, {"id": 48, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "หาผลลัพธ์ของ 1 - 3/7", "question_en": "Evaluate: 1 - 3/7", "options_th": ["4/7", "3/7", "2/7", "5/7"], "options_en": ["4/7", "3/7", "2/7", "5/7"], "answer": 0, "explanation_th": "1 = 7/7 ดังนั้น 7/7 - 3/7 = 4/7", "explanation_en": "1 = 7/7 ดังนั้น 7/7 - 3/7 = 4/7"}, {"id": 49, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "เค้กก้อนหนึ่งแบ่งเป็น 8 ส่วนเท่ากัน เอกกินไป 3/8 ก้อน นิดกินไป 2/8 ก้อน เหลือเค้กกี่ส่วนของก้อน", "question_en": "A cake is cut into 8 equal slices. Ek eats 3/8 and Nid eats 2/8. What fraction of the cake is left?", "options_th": ["3/8", "5/8", "2/8", "4/8"], "options_en": ["3/8", "5/8", "2/8", "4/8"], "answer": 0, "explanation_th": "รวมกินไป 3/8 + 2/8 = 5/8 เหลือ 8/8 - 5/8 = 3/8", "explanation_en": "รวมกินไป 3/8 + 2/8 = 5/8 เหลือ 8/8 - 5/8 = 3/8"}, {"id": 50, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "ริบบิ้นยาว 9/10 เมตร ตัดไปใช้ห่อของขวัญ 4/10 เมตร จะเหลือริบบิ้นยาวกี่เมตร", "question_en": "A ribbon is 9/10 m long. 4/10 m is cut for wrapping. How much ribbon remains?", "options_th": ["5/10 เมตร", "6/10 เมตร", "4/10 เมตร", "13/10 เมตร"], "options_en": ["5/10 เมตร", "6/10 เมตร", "4/10 เมตร", "13/10 เมตร"], "answer": 0, "explanation_th": "9/10 - 4/10 = 5/10 เมตร", "explanation_en": "9/10 - 4/10 = 5/10 เมตร"}, {"id": 51, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "เศษส่วนในข้อใดมีค่าเท่ากับ 1", "question_en": "Which of the following fractions is equal to 1?", "options_th": ["9/9", "1/9", "9/1", "0/9"], "options_en": ["9/9", "1/9", "9/1", "0/9"], "answer": 0, "explanation_th": "เมื่อตัวเศษและตัวส่วนมีค่าเท่ากันและไม่เป็นศูนย์ เศษส่วนนั้นมีค่าเท่ากับ 1", "explanation_en": "เมื่อตัวเศษและตัวส่วนมีค่าเท่ากันและไม่เป็นศูนย์ เศษส่วนนั้นมีค่าเท่ากับ 1"}, {"id": 52, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "แม่มีน้ำส้ม 4/6 ลิตร เทเพิ่มอีก 1/6 ลิตร แม่มีน้ำส้มทั้งหมดกี่ลิตร", "question_en": "Mom has 4/6 L of orange juice. She adds 1/6 L more. How much juice does she have in total?", "options_th": ["5/6 ลิตร", "3/6 ลิตร", "5/12 ลิตร", "1 ลิตร"], "options_en": ["5/6 ลิตร", "3/6 ลิตร", "5/12 ลิตร", "1 ลิตร"], "answer": 0, "explanation_th": "4/6 + 1/6 = 5/6 ลิตร", "explanation_en": "4/6 + 1/6 = 5/6 ลิตร"}, {"id": 53, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "ผ้าพับหนึ่งถูกตัดไปใช้ 2/5 พับ และ 1/5 พับ รวมตัดผ้าไปใช้เท่าใด", "question_en": "A roll of fabric has 2/5 used and then 1/5 used. What fraction of the fabric is used in total?", "options_th": ["3/5", "1/5", "3/10", "4/5"], "options_en": ["3/5", "1/5", "3/10", "4/5"], "answer": 0, "explanation_th": "2/5 + 1/5 = 3/5", "explanation_en": "2/5 + 1/5 = 3/5"}, {"id": 54, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "ข้อใดต่อไปนี้มีค่าน้อยที่สุด", "question_en": "Which of the following has the smallest value?", "options_th": ["1/12", "1/8", "1/5", "1/3"], "options_en": ["1/12", "1/8", "1/5", "1/3"], "answer": 0, "explanation_th": "เศษ 1 ส่วน 12 มีตัวส่วนมากที่สุด จึงมีค่าน้อยที่สุด", "explanation_en": "เศษ 1 ส่วน 12 มีตัวส่วนมากที่สุด จึงมีค่าน้อยที่สุด"}, {"id": 55, "cat_id": "frac", "category_th": "เศษส่วน", "category_en": "Fractions", "type": "mcq", "question_th": "ผลลัพธ์ของ 3/12 + 4/12 + 2/12 เท่ากับข้อใด", "question_en": "What is 3/12 + 4/12 + 2/12?", "options_th": ["9/12", "9/36", "7/12", "8/12"], "options_en": ["9/12", "9/36", "7/12", "8/12"], "answer": 0, "explanation_th": "(3 + 4 + 2)/12 = 9/12", "explanation_en": "(3 + 4 + 2)/12 = 9/12"}, {"id": 56, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "4 กิโลเมตร 500 เมตร คิดเป็นกี่เมตร", "question_en": "How many metres are there in 4 kilometres 500 metres?", "options_th": ["4,500 เมตร", "450 เมตร", "45,000 เมตร", "4,050 เมตร"], "options_en": ["4,500 เมตร", "450 เมตร", "45,000 เมตร", "4,050 เมตร"], "answer": 0, "explanation_th": "1 กิโลเมตร = 1,000 เมตร; 4,000 + 500 = 4,500 เมตร", "explanation_en": "1 กิโลเมตร = 1,000 เมตร; 4,000 + 500 = 4,500 เมตร"}, {"id": 57, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "7 เมตร 35 เซนติเมตร คิดเป็นกี่เซนติเมตร", "question_en": "Convert 7 metres 35 centimetres into centimetres.", "options_th": ["735 เซนติเมตร", "7,035 เซนติเมตร", "7,350 เซนติเมตร", "73.5 เซนติเมตร"], "options_en": ["735 เซนติเมตร", "7,035 เซนติเมตร", "7,350 เซนติเมตร", "73.5 เซนติเมตร"], "answer": 0, "explanation_th": "1 เมตร = 100 ซม.; (7 × 100) + 35 = 735 ซม.", "explanation_en": "1 เมตร = 100 ซม.; (7 × 100) + 35 = 735 ซม."}, {"id": 58, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "เชือกเส้นแรกยาว 3 ม. 40 ซม. เส้นที่สองยาว 2 ม. 80 ซม. นำมาต่อกันจะยาวเท่าใด", "question_en": "First rope is 3 m 40 cm, second rope is 2 m 80 cm. Joined together, what is the total length?", "options_th": ["6 เมตร 20 เซนติเมตร", "5 เมตร 20 เซนติเมตร", "6 เมตร 120 เซนติเมตร", "5 เมตร 120 เซนติเมตร"], "options_en": ["6 เมตร 20 เซนติเมตร", "5 เมตร 20 เซนติเมตร", "6 เมตร 120 เซนติเมตร", "5 เมตร 120 เซนติเมตร"], "answer": 0, "explanation_th": "3 ม. 40 ซม. + 2 ม. 80 ซม. = 5 ม. 120 ซม. = 6 ม. 20 ซม.", "explanation_en": "3 ม. 40 ซม. + 2 ม. 80 ซม. = 5 ม. 120 ซม. = 6 ม. 20 ซม."}, {"id": 59, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "ไม้ท่อนหนึ่งยาว 5 เมตร ตัดออกไป 1 เมตร 65 เซนติเมตร จะเหลือไม้ยาวเท่าใด", "question_en": "A wooden stick is 5 m long. 1 m 65 cm is cut off. What is the remaining length?", "options_th": ["3 เมตร 35 เซนติเมตร", "3 เมตร 45 เซนติเมตร", "4 เมตร 35 เซนติเมตร", "3 เมตร 65 เซนติเมตร"], "options_en": ["3 เมตร 35 เซนติเมตร", "3 เมตร 45 เซนติเมตร", "4 เมตร 35 เซนติเมตร", "3 เมตร 65 เซนติเมตร"], "answer": 0, "explanation_th": "5 ม. 00 ซม. - 1 ม. 65 ซม. = 3 ม. 35 ซม.", "explanation_en": "5 ม. 00 ซม. - 1 ม. 65 ซม. = 3 ม. 35 ซม."}, {"id": 60, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "3 กิโลกรัม 400 กรัม คิดเป็นกี่กรัม", "question_en": "Convert 3 kilograms 400 grams to grams.", "options_th": ["3,400 กรัม", "340 กรัม", "34,000 กรัม", "3,040 กรัม"], "options_en": ["3,400 กรัม", "340 กรัม", "34,000 กรัม", "3,040 กรัม"], "answer": 0, "explanation_th": "1 กิโลกรัม = 1,000 กรัม; 3,000 + 400 = 3,400 กรัม", "explanation_en": "1 กิโลกรัม = 1,000 กรัม; 3,000 + 400 = 3,400 กรัม"}, {"id": 61, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "6 ตัน 500 กิโลกรัม คิดเป็นกี่กิโลกรัม", "question_en": "Convert 6 tonnes 500 kilograms into kilograms.", "options_th": ["6,500 กิโลกรัม", "65,000 กิโลกรัม", "650 กิโลกรัม", "6,050 กิโลกรัม"], "options_en": ["6,500 กิโลกรัม", "65,000 กิโลกรัม", "650 กิโลกรัม", "6,050 กิโลกรัม"], "answer": 0, "explanation_th": "1 ตัน = 1,000 กิโลกรัม; 6,000 + 500 = 6,500 กิโลกรัม", "explanation_en": "1 ตัน = 1,000 กิโลกรัม; 6,000 + 500 = 6,500 กิโลกรัม"}, {"id": 62, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "แตงโมหนัก 2 กิโลกรัม 300 กรัม ทุเรียนหนักกว่าแตงโม 1 กิโลกรัม 800 กรัม ทุเรียนหนักเท่าใด", "question_en": "A watermelon weighs 2 kg 300 g. A durian is 1 kg 800 g heavier than the watermelon. What is the weight of the durian?", "options_th": ["4 กิโลกรัม 100 กรัม", "3 กิโลกรัม 100 กรัม", "4 กิโลกรัม 1,100 กรัม", "3 กิโลกรัม 1,100 กรัม"], "options_en": ["4 กิโลกรัม 100 กรัม", "3 กิโลกรัม 100 กรัม", "4 กิโลกรัม 1,100 กรัม", "3 กิโลกรัม 1,100 กรัม"], "answer": 0, "explanation_th": "2 กก. 300 ก. + 1 กก. 800 ก. = 3 กก. 1,100 ก. = 4 กก. 100 ก.", "explanation_en": "2 กก. 300 ก. + 1 กก. 800 ก. = 3 กก. 1,100 ก. = 4 กก. 100 ก."}, {"id": 63, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "ข้าวสาร 50 กิโลกรัม นำมาแบ่งใส่ถุง ถุงละ 2 กิโลกรัม 500 กรัม จะแบ่งได้กี่ถุง", "question_en": "50 kg of rice is packed into bags of 2 kg 500 g each. How many bags are packed?", "options_th": ["20 ถุง", "25 ถุง", "15 ถุง", "18 ถุง"], "options_en": ["20 ถุง", "25 ถุง", "15 ถุง", "18 ถุง"], "answer": 0, "explanation_th": "50 กก. = 50,000 กรัม; ถุงละ 2,500 กรัม; 50,000 ÷ 2,500 = 20 ถุง", "explanation_en": "50 กก. = 50,000 กรัม; ถุงละ 2,500 กรัม; 50,000 ÷ 2,500 = 20 ถุง"}, {"id": 64, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "4 ลิตร 250 มิลลิลิตร คิดเป็นกี่มิลลิลิตร", "question_en": "Convert 4 litres 250 millilitres to millilitres.", "options_th": ["4,250 มิลลิลิตร", "425 มิลลิลิตร", "42,500 มิลลิลิตร", "4,025 มิลลิลิตร"], "options_en": ["4,250 มิลลิลิตร", "425 มิลลิลิตร", "42,500 มิลลิลิตร", "4,025 มิลลิลิตร"], "answer": 0, "explanation_th": "1 ลิตร = 1,000 มล.; 4,000 + 250 = 4,250 มล.", "explanation_en": "1 ลิตร = 1,000 มล.; 4,000 + 250 = 4,250 มล."}, {"id": 65, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "ถังใบหนึ่งมีความจุ 15 ลิตร มีน้ำอยู่ 8 ลิตร 400 มิลลิลิตร ต้องเติมน้ำอีกเท่าใดจึงจะเต็มถัง", "question_en": "A bucket has a capacity of 15 L. It contains 8 L 400 mL of water. How much more water is needed to fill it completely?", "options_th": ["6 ลิตร 600 มิลลิลิตร", "7 ลิตร 600 มิลลิลิตร", "6 ลิตร 400 มิลลิลิตร", "7 ลิตร 400 มิลลิลิตร"], "options_en": ["6 ลิตร 600 มิลลิลิตร", "7 ลิตร 600 มิลลิลิตร", "6 ลิตร 400 มิลลิลิตร", "7 ลิตร 400 มิลลิลิตร"], "answer": 0, "explanation_th": "15 ลิตร - 8 ลิตร 400 มล. = 6 ลิตร 600 มล.", "explanation_en": "15 ลิตร - 8 ลิตร 400 มล. = 6 ลิตร 600 มล."}, {"id": 66, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "8,750 มิลลิลิตร คิดเป็นกี่ลิตร กี่มิลลิลิตร", "question_en": "Convert 8,750 millilitres to litres and millilitres.", "options_th": ["8 ลิตร 750 มิลลิลิตร", "87 ลิตร 50 มิลลิลิตร", "80 ลิตร 750 มิลลิลิตร", "8 ลิตร 75 มิลลิลิตร"], "options_en": ["8 ลิตร 750 มิลลิลิตร", "87 ลิตร 50 มิลลิลิตร", "80 ลิตร 750 มิลลิลิตร", "8 ลิตร 75 มิลลิลิตร"], "answer": 0, "explanation_th": "8,750 มล. = 8 ลิตร กับ 750 มล.", "explanation_en": "8,750 มล. = 8 ลิตร กับ 750 มล."}, {"id": 67, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "เวลา 21.15 น. อ่านบอกเวลาเป็นกลางคืนตรงกับข้อใด", "question_en": "What time does 21:15 represent at night?", "options_th": ["21 นาฬิกา 15 นาที (หรือ 3 ทุ่ม 15 นาที)", "9 นาฬิกา 15 นาที", "21 นาฬิกา 50 นาที", "20 นาฬิกา 15 นาที"], "options_en": ["21 นาฬิกา 15 นาที (หรือ 3 ทุ่ม 15 นาที)", "9 นาฬิกา 15 นาที", "21 นาฬิกา 50 นาที", "20 นาฬิกา 15 นาที"], "answer": 0, "explanation_th": "21.15 น. คือเวลา 21 นาฬิกา 15 นาที ในเวลากลางคืน", "explanation_en": "21.15 น. คือเวลา 21 นาฬิกา 15 นาที ในเวลากลางคืน"}, {"id": 68, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "2 ชั่วโมง 45 นาที รวมกับ 1 ชั่วโมง 30 นาที เท่ากับกี่ชั่วโมง กี่นาที", "question_en": "Add 2 hours 45 minutes and 1 hour 30 minutes.", "options_th": ["4 ชั่วโมง 15 นาที", "3 ชั่วโมง 75 นาที", "4 ชั่วโมง 30 นาที", "3 ชั่วโมง 15 นาที"], "options_en": ["4 ชั่วโมง 15 นาที", "3 ชั่วโมง 75 นาที", "4 ชั่วโมง 30 นาที", "3 ชั่วโมง 15 นาที"], "answer": 0, "explanation_th": "2 ชม. 45 นาที + 1 ชม. 30 นาที = 3 ชม. 75 นาที = 4 ชม. 15 นาที", "explanation_en": "2 ชม. 45 นาที + 1 ชม. 30 นาที = 3 ชม. 75 นาที = 4 ชม. 15 นาที"}, {"id": 69, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "ฟุตบอลเริ่มแข่งเวลา 15.30 น. แข่ง 1 ชั่วโมง 45 นาที จะสิ้นสุดเวลาใด", "question_en": "A football match starts at 15:30. It lasts for 1 hour 45 minutes. What time does it end?", "options_th": ["17.15 น.", "16.75 น.", "17.30 น.", "16.15 น."], "options_en": ["17.15 น.", "16.75 น.", "17.30 น.", "16.15 น."], "answer": 0, "explanation_th": "15.30 น. + 1 ชม. 45 นาที = 17.15 น.", "explanation_en": "15.30 น. + 1 ชม. 45 นาที = 17.15 น."}, {"id": 70, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "สุดาเริ่มอ่านหนังสือเวลา 19.15 น. เสร็จเวลา 20.40 น. สุดาใช้เวลาอ่านหนังสือกี่นาที", "question_en": "Suda started reading at 19:15 and finished at 20:40. How long did she read?", "options_th": ["1 ชั่วโมง 25 นาที (85 นาที)", "1 ชั่วโมง 15 นาที (75 นาที)", "1 ชั่วโมง 35 นาที (95 นาที)", "55 นาที"], "options_en": ["1 ชั่วโมง 25 นาที (85 นาที)", "1 ชั่วโมง 15 นาที (75 นาที)", "1 ชั่วโมง 35 นาที (95 นาที)", "55 นาที"], "answer": 0, "explanation_th": "20.40 - 19.15 = 1 ชั่วโมง 25 นาที", "explanation_en": "20.40 - 19.15 = 1 ชั่วโมง 25 นาที"}, {"id": 71, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "มีธนบัตร 500 บาท 2 ฉบับ, 100 บาท 5 ฉบับ, 50 บาท 4 ฉบับ และเหรียญ 10 บาท 8 เหรียญ รวมเป็นเงินกี่บาท", "question_en": "You have two 500-Baht notes, five 100-Baht notes, four 50-Baht notes, and eight 10-Baht coins. What is the total value?", "options_th": ["1,780 บาท", "1,680 บาท", "1,880 บาท", "1,750 บาท"], "options_en": ["1,780 บาท", "1,680 บาท", "1,880 บาท", "1,750 บาท"], "answer": 0, "explanation_th": "(500×2) + (100×5) + (50×4) + (10×8) = 1,000 + 500 + 200 + 80 = 1,780 บาท", "explanation_en": "(500×2) + (100×5) + (50×4) + (10×8) = 1,000 + 500 + 200 + 80 = 1,780 บาท"}, {"id": 72, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "มีเงิน 125.50 บาท ซื้อขนมไป 48.75 บาท จะเหลือเงินกี่บาท", "question_en": "You have 125.50 Baht and spend 48.75 Baht on snacks. How much money do you have left?", "options_th": ["76.75 บาท", "76.25 บาท", "77.75 บาท", "75.75 บาท"], "options_en": ["76.75 บาท", "76.25 บาท", "77.75 บาท", "75.75 บาท"], "answer": 0, "explanation_th": "125.50 - 48.75 = 76.75 บาท", "explanation_en": "125.50 - 48.75 = 76.75 บาท"}, {"id": 73, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "เสื้อราคา 250 บาท กางเกงราคา 390 บาท ให้ธนบัตร 1,000 บาท จะได้รับเงินทอนกี่บาท", "question_en": "A shirt costs 250 Baht and pants cost 390 Baht. You pay with a 1,000-Baht note. How much change do you receive?", "options_th": ["360 บาท", "350 บาท", "370 บาท", "460 บาท"], "options_en": ["360 บาท", "350 บาท", "370 บาท", "460 บาท"], "answer": 0, "explanation_th": "ราคารวม = 250 + 390 = 640 บาท; เงินทอน = 1,000 - 640 = 360 บาท", "explanation_en": "ราคารวม = 250 + 390 = 640 บาท; เงินทอน = 1,000 - 640 = 360 บาท"}, {"id": 74, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "3 สัปดาห์ 4 วัน คิดเป็นทั้งหมดกี่วัน", "question_en": "How many days are there in 3 weeks and 4 days?", "options_th": ["25 วัน", "21 วัน", "28 วัน", "24 วัน"], "options_en": ["25 วัน", "21 วัน", "28 วัน", "24 วัน"], "answer": 0, "explanation_th": "1 สัปดาห์ = 7 วัน; (3 × 7) + 4 = 21 + 4 = 25 วัน", "explanation_en": "1 สัปดาห์ = 7 วัน; (3 × 7) + 4 = 21 + 4 = 25 วัน"}, {"id": 75, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "รถไฟออกเดินทางเวลา 06.30 น. ถึงปลายทางเวลา 13.15 น. ใช้เวลาเดินทางเท่าใด", "question_en": "A train departs at 06:30 and arrives at 13:15. What is the duration of the journey?", "options_th": ["6 ชั่วโมง 45 นาที", "7 ชั่วโมง 15 นาที", "6 ชั่วโมง 15 นาที", "7 ชั่วโมง 45 นาที"], "options_en": ["6 ชั่วโมง 45 นาที", "7 ชั่วโมง 15 นาที", "6 ชั่วโมง 15 นาที", "7 ชั่วโมง 45 นาที"], "answer": 0, "explanation_th": "จาก 06.30 ถึง 13.15 = 6 ชั่วโมง 45 นาที", "explanation_en": "จาก 06.30 ถึง 13.15 = 6 ชั่วโมง 45 นาที"}, {"id": 76, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "จำนวนเงิน 'สามร้อยเจ็ดสิบห้าบาทห้าสิบสตางค์' เขียนโดยใช้จุดได้ตามข้อใด", "question_en": "How is 'three hundred seventy-five Baht and fifty Satang' written in standard decimal notation?", "options_th": ["375.50 บาท", "375.05 บาท", "357.50 บาท", "375.5 บาท"], "options_en": ["375.50 บาท", "375.05 บาท", "357.50 บาท", "375.5 บาท"], "answer": 0, "explanation_th": "375 บาท กับ 50 สตางค์ เขียนเป็น 375.50 บาท", "explanation_en": "375 บาท กับ 50 สตางค์ เขียนเป็น 375.50 บาท"}, {"id": 77, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "มีเงินยกมา 200 บาท แม่ให้อีก 100 บาท ซื้อสมุด 25 บาท ซื้ออาหาร 40 บาท เหลือเงินกี่บาท", "question_en": "Starting with 200 Baht, received 100 Baht from mom, spent 25 Baht on a book and 40 Baht on lunch. How much remains?", "options_th": ["235 บาท", "245 บาท", "225 บาท", "255 บาท"], "options_en": ["235 บาท", "245 บาท", "225 บาท", "255 บาท"], "answer": 0, "explanation_th": "(200 + 100) - (25 + 40) = 300 - 65 = 235 บาท", "explanation_en": "(200 + 100) - (25 + 40) = 300 - 65 = 235 บาท"}, {"id": 78, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "เหยือกน้ำมีความจุ 2 ลิตร เทน้ำใส่แก้วขนาด 250 มิลลิลิตร ได้เต็มแก้วกี่ใบ", "question_en": "A 2-litre jug is poured into glasses of 250 millilitres each. How many full glasses can be filled?", "options_th": ["8 ใบ", "6 ใบ", "10 ใบ", "4 ใบ"], "options_en": ["8 ใบ", "6 ใบ", "10 ใบ", "4 ใบ"], "answer": 0, "explanation_th": "2 ลิตร = 2,000 มล.; 2,000 ÷ 250 = 8 ใบ", "explanation_en": "2 ลิตร = 2,000 มล.; 2,000 ÷ 250 = 8 ใบ"}, {"id": 79, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "ถนนยาว 12 กิโลเมตร ลาดยางไปแล้ว 7 กิโลเมตร 650 เมตร เหลือกี่กิโลเมตรกี่เมตรที่ยังไม่ได้ลาดยาง", "question_en": "A road is 12 km long. 7 km 650 m has been paved. How much road is left unpaved?", "options_th": ["4 กิโลเมตร 350 เมตร", "5 กิโลเมตร 350 เมตร", "4 กิโลเมตร 650 เมตร", "5 กิโลเมตร 650 เมตร"], "options_en": ["4 กิโลเมตร 350 เมตร", "5 กิโลเมตร 350 เมตร", "4 กิโลเมตร 650 เมตร", "5 กิโลเมตร 650 เมตร"], "answer": 0, "explanation_th": "12 กม. 000 ม. - 7 กม. 650 ม. = 4 กม. 350 ม.", "explanation_en": "12 กม. 000 ม. - 7 กม. 650 ม. = 4 กม. 350 ม."}, {"id": 80, "cat_id": "meas", "category_th": "การวัด เวลา และเงิน", "category_en": "Measurement, Time & Money", "type": "mcq", "question_th": "เนื้อหมูหนัก 1 กก. 200 ก. เนื้อไก่หนัก 800 ก. รวมเนื้อทั้งสองชนิดหนักกี่กิโลกรัม", "question_en": "Pork weighs 1 kg 200 g and chicken weighs 800 g. What is their combined mass in kilograms?", "options_th": ["2 กิโลกรัม", "2 กิโลกรัม 200 กรัม", "1 กิโลกรัม 800 กรัม", "2.5 กิโลกรัม"], "options_en": ["2 กิโลกรัม", "2 กิโลกรัม 200 กรัม", "1 กิโลกรัม 800 กรัม", "2.5 กิโลกรัม"], "answer": 0, "explanation_th": "1 กก. 200 ก. + 800 ก. = 1 กก. 1,000 ก. = 2 กิโลกรัม", "explanation_en": "1 กก. 200 ก. + 800 ก. = 1 กก. 1,000 ก. = 2 กิโลกรัม"}, {"id": 81, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "รูปเรขาคณิตสองมิติที่มีด้าน 4 ด้าน มุมทุกมุมเป็นมุมฉาก ด้านตรงข้ามยาวเท่ากัน แต่ด้านติดกันยาวไม่เท่ากัน คือรูปใด", "question_en": "A 2D shape has 4 sides, all right angles, opposite sides equal, but adjacent sides not equal. What shape is it?", "options_th": ["รูปสี่เหลี่ยมผืนผ้า (Rectangle)", "รูปสี่เหลี่ยมจัตุรัส (Square)", "รูปสี่เหลี่ยมขนมเปียกปูน (Rhombus)", "รูปสามเหลี่ยม (Triangle)"], "options_en": ["รูปสี่เหลี่ยมผืนผ้า (Rectangle)", "รูปสี่เหลี่ยมจัตุรัส (Square)", "รูปสี่เหลี่ยมขนมเปียกปูน (Rhombus)", "รูปสามเหลี่ยม (Triangle)"], "answer": 0, "explanation_th": "รูปสี่เหลี่ยมผืนผ้า มีมุมฉาก 4 มุม ด้านตรงข้ามยาวเท่ากัน", "explanation_en": "รูปสี่เหลี่ยมผืนผ้า มีมุมฉาก 4 มุม ด้านตรงข้ามยาวเท่ากัน"}, {"id": 82, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "รูปสี่เหลี่ยมจัตุรัสมีแกนสมมาตรทั้งหมดกี่แกน", "question_en": "How many lines of symmetry does a square have?", "options_th": ["4 แกน", "2 แกน", "1 แกน", "นับไม่ถ้วน"], "options_en": ["4 แกน", "2 แกน", "1 แกน", "นับไม่ถ้วน"], "answer": 0, "explanation_th": "รูปสี่เหลี่ยมจัตุรัสมีแกนสมมาตร 4 แกน (แนวนอน แนวตั้ง และแนวทแยงมุม 2 เส้น)", "explanation_en": "รูปสี่เหลี่ยมจัตุรัสมีแกนสมมาตร 4 แกน (แนวนอน แนวตั้ง และแนวทแยงมุม 2 เส้น)"}, {"id": 83, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "รูปสามเหลี่ยมด้านเท่ามีแกนสมมาตรทั้งหมดกี่แกน", "question_en": "How many lines of symmetry does an equilateral triangle have?", "options_th": ["3 แกน", "1 แกน", "2 แกน", "0 แกน"], "options_en": ["3 แกน", "1 แกน", "2 แกน", "0 แกน"], "answer": 0, "explanation_th": "รูปสามเหลี่ยมด้านเท่ามีแกนสมมาตร 3 แกน", "explanation_en": "รูปสามเหลี่ยมด้านเท่ามีแกนสมมาตร 3 แกน"}, {"id": 84, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "รูปวงกลมมีแกนสมมาตรทั้งหมดกี่แกน", "question_en": "How many lines of symmetry does a circle have?", "options_th": ["นับไม่ถ้วน (Infinite)", "4 แกน", "2 แกน", "1 แกน"], "options_en": ["นับไม่ถ้วน (Infinite)", "4 แกน", "2 แกน", "1 แกน"], "answer": 0, "explanation_th": "วงกลมสามารถลากเส้นผ่านศูนย์กลางเพื่อพับทับกันได้สนิทนับไม่ถ้วนแกน", "explanation_en": "วงกลมสามารถลากเส้นผ่านศูนย์กลางเพื่อพับทับกันได้สนิทนับไม่ถ้วนแกน"}, {"id": 85, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "รูปสี่เหลี่ยมผืนผ้ามีแกนสมมาตรทั้งหมดกี่แกน", "question_en": "How many lines of symmetry does a rectangle have?", "options_th": ["2 แกน", "4 แกน", "1 แกน", "0 แกน"], "options_en": ["2 แกน", "4 แกน", "1 แกน", "0 แกน"], "answer": 0, "explanation_th": "สี่เหลี่ยมผืนผ้ามีแกนสมมาตร 2 แกน (แนวตั้งและแนวนอน รอยพับแนวทแยงมุมไม่ทับสนิท)", "explanation_en": "สี่เหลี่ยมผืนผ้ามีแกนสมมาตร 2 แกน (แนวตั้งและแนวนอน รอยพับแนวทแยงมุมไม่ทับสนิท)"}, {"id": 86, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "พับกระดาษรูปสี่เหลี่ยมผืนผ้าตามแนวทแยงมุม รอยพับนั้นเป็นแกนสมมาตรหรือไม่ เพราะเหตุใด", "question_en": "If a rectangular paper is folded along its diagonal, is the crease a line of symmetry? Why?", "options_th": ["ไม่เป็น เพราะเมื่อพับแล้วทั้งสองส่วนไม่ทับกันสนิท", "เป็น เพราะแบ่งรูปออกเป็นสองส่วนเท่ากัน", "เป็น เพราะได้รูปสามเหลี่ยมเหมือนกัน", "ไม่เป็น เพราะไม่มีเส้นตรง"], "options_en": ["ไม่เป็น เพราะเมื่อพับแล้วทั้งสองส่วนไม่ทับกันสนิท", "เป็น เพราะแบ่งรูปออกเป็นสองส่วนเท่ากัน", "เป็น เพราะได้รูปสามเหลี่ยมเหมือนกัน", "ไม่เป็น เพราะไม่มีเส้นตรง"], "answer": 0, "explanation_th": "แกนสมมาตรต้องทำให้ทั้งสองข้างพับทับกันได้สนิทพอดี รอยทแยงมุมของสี่เหลี่ยมผืนผ้าไม่ทับสนิท", "explanation_en": "แกนสมมาตรต้องทำให้ทั้งสองข้างพับทับกันได้สนิทพอดี รอยทแยงมุมของสี่เหลี่ยมผืนผ้าไม่ทับสนิท"}, {"id": 87, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "รูปใดต่อไปนี้ไม่มีแกนสมมาตร", "question_en": "Which of the following shapes has NO lines of symmetry?", "options_th": ["รูปสามเหลี่ยมด้านไม่เท่า (Scalene triangle)", "รูปสามเหลี่ยมหน้าจั่ว (Isosceles triangle)", "รูปสี่เหลี่ยมจัตุรัส (Square)", "รูปวงกลม (Circle)"], "options_en": ["รูปสามเหลี่ยมด้านไม่เท่า (Scalene triangle)", "รูปสามเหลี่ยมหน้าจั่ว (Isosceles triangle)", "รูปสี่เหลี่ยมจัตุรัส (Square)", "รูปวงกลม (Circle)"], "answer": 0, "explanation_th": "รูปสามเหลี่ยมด้านไม่เท่า ด้านทุกด้านยาวไม่เท่ากัน จึงไม่มีแกนสมมาตร", "explanation_en": "รูปสามเหลี่ยมด้านไม่เท่า ด้านทุกด้านยาวไม่เท่ากัน จึงไม่มีแกนสมมาตร"}, {"id": 88, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "รูปหกเหลี่ยมด้านเท่ามุมเท่ามีแกนสมมาตรกี่แกน", "question_en": "How many lines of symmetry does a regular hexagon have?", "options_th": ["6 แกน", "3 แกน", "4 แกน", "12 แกน"], "options_en": ["6 แกน", "3 แกน", "4 แกน", "12 แกน"], "answer": 0, "explanation_th": "รูปหลายเหลี่ยมด้านเท่ามุมเท่า n เหลี่ยม จะมีแกนสมมาตร n แกน ดังนั้นหกเหลี่ยมจึงมี 6 แกน", "explanation_en": "รูปหลายเหลี่ยมด้านเท่ามุมเท่า n เหลี่ยม จะมีแกนสมมาตร n แกน ดังนั้นหกเหลี่ยมจึงมี 6 แกน"}, {"id": 89, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "รูปวงรีมีแกนสมมาตรกี่แกน", "question_en": "How many lines of symmetry does an ellipse (oval) have?", "options_th": ["2 แกน", "4 แกน", "1 แกน", "นับไม่ถ้วน"], "options_en": ["2 แกน", "4 แกน", "1 แกน", "นับไม่ถ้วน"], "answer": 0, "explanation_th": "รูปวงรีมีแกนสมมาตร 2 แกน (ตามแนวยาวและแนวขวาง)", "explanation_en": "รูปวงรีมีแกนสมมาตร 2 แกน (ตามแนวยาวและแนวขวาง)"}, {"id": 90, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "ตัวอักษรภาษาอังกฤษตัวใดต่อไปนี้มีแกนสมมาตร 2 แกน", "question_en": "Which of the following English letters has 2 lines of symmetry?", "options_th": ["H", "A", "M", "P"], "options_en": ["H", "A", "M", "P"], "answer": 0, "explanation_th": "ตัวอักษร H มีแกนสมมาตร 2 แกน ทั้งในแนวนอนและแนวตั้ง", "explanation_en": "ตัวอักษร H มีแกนสมมาตร 2 แกน ทั้งในแนวนอนและแนวตั้ง"}, {"id": 91, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "รูปสามเหลี่ยมหน้าจั่วมีแกนสมมาตรกี่แกน", "question_en": "How many lines of symmetry does an isosceles triangle have?", "options_th": ["1 แกน", "2 แกน", "3 แกน", "0 แกน"], "options_en": ["1 แกน", "2 แกน", "3 แกน", "0 แกน"], "answer": 0, "explanation_th": "รูปสามเหลี่ยมหน้าจั่วที่มีด้านยาวเท่ากัน 2 ด้าน มีแกนสมมาตรเพียง 1 แกน", "explanation_en": "รูปสามเหลี่ยมหน้าจั่วที่มีด้านยาวเท่ากัน 2 ด้าน มีแกนสมมาตรเพียง 1 แกน"}, {"id": 92, "cat_id": "geo", "category_th": "เรขาคณิตและแกนสมมาตร", "category_en": "2D Shapes & Symmetry", "type": "mcq", "question_th": "ข้อใดกล่าวถูกต้องเกี่ยวกับมุมฉาก", "question_en": "Which statement is true about a right angle?", "options_th": ["มีขนาดเท่ากับ 90 องศา (หรือมุมตรงของมุมกระดาษ)", "มีขนาดเล็กกว่ามุมแหลม", "มีขนาดใหญ่กว่ามุมป้าน", "มีขนาด 180 องศา"], "options_en": ["มีขนาดเท่ากับ 90 องศา (หรือมุมตรงของมุมกระดาษ)", "มีขนาดเล็กกว่ามุมแหลม", "มีขนาดใหญ่กว่ามุมป้าน", "มีขนาด 180 องศา"], "answer": 0, "explanation_th": "มุมฉากมีขนาด 90 องศา", "explanation_en": "มุมฉากมีขนาด 90 องศา"}, {"id": 93, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "แผนภูมิรูปภาพ: รูปต้นไม้ 1 รูป แทนต้นไม้ 5 ต้น ถ้ามีรูปต้นไม้ 7 รูป แสดงว่ามีต้นไม้จริงกี่ต้น", "question_en": "In a pictogram, 1 tree symbol represents 5 trees. If there are 7 tree symbols, how many real trees are there?", "options_th": ["35 ต้น", "12 ต้น", "30 ต้น", "40 ต้น"], "options_en": ["35 ต้น", "12 ต้น", "30 ต้น", "40 ต้น"], "answer": 0, "explanation_th": "7 × 5 = 35 ต้น", "explanation_en": "7 × 5 = 35 ต้น"}, {"id": 94, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "แผนภูมิรูปภาพ: รูปผลไม้ 1 รูป แทนผลไม้ 10 กก. ขายส้มได้ 4 รูป มังคุด 6 รูป แอปเปิล 3 รูปครึ่ง ขายมังคุดได้มากกว่าส้มกี่กิโลกรัม", "question_en": "In a pictogram, 1 fruit symbol = 10 kg. Oranges = 4 symbols, Mangosteens = 6 symbols, Apples = 3.5 symbols. How many more kg of mangosteens were sold than oranges?", "options_th": ["20 กิโลกรัม", "10 กิโลกรัม", "60 กิโลกรัม", "30 กิโลกรัม"], "options_en": ["20 กิโลกรัม", "10 กิโลกรัม", "60 กิโลกรัม", "30 กิโลกรัม"], "answer": 0, "explanation_th": "มังคุด 60 กก. ส้ม 40 กก. ต่างกัน 60 - 40 = 20 กก.", "explanation_en": "มังคุด 60 กก. ส้ม 40 กก. ต่างกัน 60 - 40 = 20 กก."}, {"id": 95, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "จากข้อ 94 ขายผลไม้รวมได้ทั้งหมดกี่กิโลกรัม", "question_en": "From question 94, what is the total mass of fruits sold altogether?", "options_th": ["135 กิโลกรัม", "130 กิโลกรัม", "140 กิโลกรัม", "125 กิโลกรัม"], "options_en": ["135 กิโลกรัม", "130 กิโลกรัม", "140 กิโลกรัม", "125 กิโลกรัม"], "answer": 0, "explanation_th": "ส้ม 40 + มังคุด 60 + แอปเปิล 35 = 135 กก.", "explanation_en": "ส้ม 40 + มังคุด 60 + แอปเปิล 35 = 135 กก."}, {"id": 96, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "ตารางนักเรียนชอบกีฬา: ฟุตบอล 45 คน, ว่ายน้ำ 30 คน, วิ่ง 25 คน, แบดมินตัน 35 คน นักเรียนชอบฟุตบอลและแบดมินตันรวมกันมากกว่าว่ายน้ำกี่คน", "question_en": "From survey table: Football 45, Swimming 30, Running 25, Badminton 35. How many more students prefer Football and Badminton combined compared to Swimming?", "options_th": ["50 คน", "45 คน", "80 คน", "15 คน"], "options_en": ["50 คน", "45 คน", "80 คน", "15 คน"], "answer": 0, "explanation_th": "(45 + 35) - 30 = 80 - 30 = 50 คน", "explanation_en": "(45 + 35) - 30 = 80 - 30 = 50 คน"}, {"id": 97, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "นักเรียน 150 คน เดินทางด้วยรถโรงเรียน 60 คน, มอเตอร์ไซค์ 45 คน, เดิน 15 คน ที่เหลือมารถยนต์ มีนักเรียนมารถยนต์กี่คน", "question_en": "Out of 150 students: 60 take the school bus, 45 take motorcycles, 15 walk, and the rest come by car. How many come by car?", "options_th": ["30 คน", "25 คน", "35 คน", "40 คน"], "options_en": ["30 คน", "25 คน", "35 คน", "40 คน"], "answer": 0, "explanation_th": "150 - (60 + 45 + 15) = 150 - 120 = 30 คน", "explanation_en": "150 - (60 + 45 + 15) = 150 - 120 = 30 คน"}, {"id": 98, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "ร้านค้าขายไอศกรีม 5 วัน: จันทร์ 120 แท่ง, อังคาร 90 แท่ง, พุธ 150 แท่ง, พฤหัสบดี 110 แท่ง, ศุกร์ 130 แท่ง วันใดขายไอศกรีมได้มากที่สุดและขายได้กี่แท่ง", "question_en": "Ice cream sales over 5 days: Mon 120, Tue 90, Wed 150, Thu 110, Fri 130. Which day had the highest sales and how many?", "options_th": ["วันพุธ 150 แท่ง", "วันศุกร์ 130 แท่ง", "วันจันทร์ 120 แท่ง", "วันพฤหัสบดี 110 แท่ง"], "options_en": ["วันพุธ 150 แท่ง", "วันศุกร์ 130 แท่ง", "วันจันทร์ 120 แท่ง", "วันพฤหัสบดี 110 แท่ง"], "answer": 0, "explanation_th": "วันพุธขายได้มากที่สุดคือ 150 แท่ง", "explanation_en": "วันพุธขายได้มากที่สุดคือ 150 แท่ง"}, {"id": 99, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "จากข้อ 98 ยอดขายไอศกรีมรวมทั้ง 5 วันเป็นกี่แท่ง", "question_en": "From question 98, what was the total ice cream sales over all 5 days?", "options_th": ["600 แท่ง", "580 แท่ง", "620 แท่ง", "550 แท่ง"], "options_en": ["600 แท่ง", "580 แท่ง", "620 แท่ง", "550 แท่ง"], "answer": 0, "explanation_th": "120 + 90 + 150 + 110 + 130 = 600 แท่ง", "explanation_en": "120 + 90 + 150 + 110 + 130 = 600 แท่ง"}, {"id": 100, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "ในแผนภูมิรูปภาพ ถ้ารูปหัวใจ 1 รูป แทนจำนวน 8 คน รูปหัวใจ 4 รูปครึ่ง จะแทนจำนวนกี่คน", "question_en": "In a pictogram, if 1 heart symbol represents 8 people, how many people do 4 and a half heart symbols represent?", "options_th": ["36 คน", "32 คน", "40 คน", "34 คน"], "options_en": ["36 คน", "32 คน", "40 คน", "34 คน"], "answer": 0, "explanation_th": "(4 × 8) + 4 = 32 + 4 = 36 คน", "explanation_en": "(4 × 8) + 4 = 32 + 4 = 36 คน"}, {"id": 101, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "มีนักเรียนชั้น ป.3 ทั้งหมด 120 คน เป็นนักเรียนชาย 55 คน จะมีนักเรียนหญิงกี่คน", "question_en": "In Grade 3, there are 120 students in total. 55 are boys. How many girls are there?", "options_th": ["65 คน", "55 คน", "75 คน", "60 คน"], "options_en": ["65 คน", "55 คน", "75 คน", "60 คน"], "answer": 0, "explanation_th": "120 - 55 = 65 คน", "explanation_en": "120 - 55 = 65 คน"}, {"id": 102, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "ลุงมีเงิน 65,000 บาท ซื้อปั๊มน้ำ 18,500 บาท ซื้อท่อ 3,450 บาท ลุงเหลือเงินกี่บาท", "question_en": "Uncle has 65,000 Baht. He buys a water pump for 18,500 Baht and pipes for 3,450 Baht. How much money is left?", "options_th": ["43,050 บาท", "44,050 บาท", "42,050 บาท", "43,150 บาท"], "options_en": ["43,050 บาท", "44,050 บาท", "42,050 บาท", "43,150 บาท"], "answer": 0, "explanation_th": "65,000 - (18,500 + 3,450) = 65,000 - 21,950 = 43,050 บาท", "explanation_en": "65,000 - (18,500 + 3,450) = 65,000 - 21,950 = 43,050 บาท"}, {"id": 103, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "กลุ่มแม่บ้านทำขนม 1,200 ลูก บรรจุกล่อง กล่องละ 6 ลูก ขายกล่องละ 35 บาท ถ้าขายหมดได้เงินกี่บาท", "question_en": "A community makes 1,200 pastries, packs them 6 per box, and sells each box for 35 Baht. If all are sold, how much money is made?", "options_th": ["7,000 บาท", "6,500 บาท", "7,200 บาท", "6,000 บาท"], "options_en": ["7,000 บาท", "6,500 บาท", "7,200 บาท", "6,000 บาท"], "answer": 0, "explanation_th": "(1,200 ÷ 6) × 35 = 200 × 35 = 7,000 บาท", "explanation_en": "(1,200 ÷ 6) × 35 = 200 × 35 = 7,000 บาท"}, {"id": 104, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "รถตู้เริ่มเดินทาง 08.15 น. วิ่งไป 2 ชม. 45 นาที พัก 30 นาที วิ่งต่ออีก 1 ชม. 15 นาที ถึงปลายทางเวลาใด", "question_en": "A bus departs at 08:15. It travels for 2h 45m, stops for 30m, and travels for another 1h 15m. What time does it arrive?", "options_th": ["12.45 น.", "12.30 น.", "13.00 น.", "12.15 น."], "options_en": ["12.45 น.", "12.30 น.", "13.00 น.", "12.15 น."], "answer": 0, "explanation_th": "เวลาเดินทางรวม = 2 ชม. 45 นาที + 30 นาที + 1 ชม. 15 นาที = 4 ชม. 30 นาที; 08.15 + 4 ชม. 30 นาที = 12.45 น.", "explanation_en": "เวลาเดินทางรวม = 2 ชม. 45 นาที + 30 นาที + 1 ชม. 15 นาที = 4 ชม. 30 นาที; 08.15 + 4 ชม. 30 นาที = 12.45 น."}, {"id": 105, "cat_id": "data", "category_th": "การจัดการข้อมูลและโจทย์ปัญหา", "category_en": "Data Handling & Problem Solving", "type": "mcq", "question_th": "ฟาร์มแห่งหนึ่งมีไก่ 450 ตัว มีเป็ดมากกว่าไก่ 120 ตัว รวมมีเป็ดและไก่ทั้งหมดกี่ตัว", "question_en": "A farm has 450 chickens. It has 120 more ducks than chickens. How many ducks and chickens are there in total?", "options_th": ["1,020 ตัว", "570 ตัว", "920 ตัว", "1,120 ตัว"], "options_en": ["1,020 ตัว", "570 ตัว", "920 ตัว", "1,120 ตัว"], "answer": 0, "explanation_th": "เป็ด = 450 + 120 = 570 ตัว; รวม = 450 + 570 = 1,020 ตัว", "explanation_en": "เป็ด = 450 + 120 = 570 ตัว; รวม = 450 + 570 = 1,020 ตัว"}];
 
-    // 2. Metadata
+    // 2. Categories Metadata
     const categories = [
       { id: "num", th: "จำนวนและค่าประจำหลัก", en: "Numbers & Place Value", icon: "fa-arrow-up-1-9", color: "indigo" },
       { id: "ops", th: "การคำนวณพื้นฐาน", en: "Basic Operations", icon: "fa-calculator", color: "blue" },
@@ -770,20 +981,24 @@
       { id: "data", th: "การจัดการข้อมูลและโจทย์ปัญหา", en: "Data Handling & Problem Solving", icon: "fa-chart-simple", color: "rose" }
     ];
 
-    // 3. User & Session State
-    let currentUser = null; // { role: 'student'|'teacher', name, no, room, school, avatar }
-    let currentLang = 'th';
-    let currentAuthRole = 'student';
-    let activeStudentIndexForFeedback = null;
+    const availableAvatars = ["🦸‍♂️", "🧙‍♀️", "🚀", "🐱", "🤖", "🦁", "🌟", "🦄", "🐼", "🦊", "👑", "🎯"];
 
-    let studentProgress = {
+    // 3. Application State
+    let currentAppRole = 'teacher'; // 'teacher' (Default) or 'student'
+    let currentStudent = null; // { id, name, no, room, school, avatar }
+    let currentLang = 'th';
+    let googleSheetWebhook = '';
+    let activeStudentFeedbackIdx = null;
+
+    // Student Progress Record
+    let currentStudentProgress = {
       completedQuestions: {}, // qId -> { isCorrect, selectedOption, timestamp }
       streak: 1,
       feedback: "ยินดีต้อนรับสู่ระบบ NT Math Hero! ขอให้สนุกกับการฝึกทำโจทย์นะลูก",
-      feedbackDate: "วันนี้"
+      feedbackDate: "ล่าสุด"
     };
 
-    // Shared Classroom Database for Teacher Monitoring
+    // Shared Classroom Roster
     let classroomDatabase = [];
 
     // Active Quiz Session
@@ -799,174 +1014,783 @@
     };
 
     // Chart instances
+    let teacherClassRadar = null;
+    let teacherTopicBar = null;
     let studentHomeRadar = null;
     let studentAnalyticsRadar = null;
     let studentAnalyticsBar = null;
     let studentResultRadar = null;
-    let teacherClassRadar = null;
-    let teacherTopicBar = null;
     let modalStudentRadar = null;
 
-    // Load State from LocalStorage
+    // ================= PERSISTENCE & INITIALIZATION =================
     function loadStorage() {
-      const savedUser = localStorage.getItem('nt_app_current_user');
-      if (savedUser) {
-        try { currentUser = JSON.parse(savedUser); } catch(e) {}
+      const savedQuestions = localStorage.getItem('nt_questions_v4');
+      if (savedQuestions) {
+        try { questions = JSON.parse(savedQuestions); } catch(e) {}
       }
-      const savedProg = localStorage.getItem('nt_app_student_progress');
-      if (savedProg) {
-        try { studentProgress = JSON.parse(savedProg); } catch(e) {}
-      }
-      const savedClass = localStorage.getItem('nt_app_classroom_db');
+      const savedClass = localStorage.getItem('nt_classroom_v4');
       if (savedClass) {
         try { classroomDatabase = JSON.parse(savedClass); } catch(e) {}
       } else {
         generateInitialClassroom();
       }
-      const savedQuestions = localStorage.getItem('nt_app_custom_questions');
-      if (savedQuestions) {
-        try { questions = JSON.parse(savedQuestions); } catch(e) {}
-      }
+      const savedWebhook = localStorage.getItem('nt_gsheet_webhook_v4');
+      if (savedWebhook) googleSheetWebhook = savedWebhook;
     }
 
     function saveStorage() {
-      if (currentUser) localStorage.setItem('nt_app_current_user', JSON.stringify(currentUser));
-      localStorage.setItem('nt_app_student_progress', JSON.stringify(studentProgress));
-      localStorage.setItem('nt_app_classroom_db', JSON.stringify(classroomDatabase));
-      localStorage.setItem('nt_app_custom_questions', JSON.stringify(questions));
+      localStorage.setItem('nt_questions_v4', JSON.stringify(questions));
+      localStorage.setItem('nt_classroom_v4', JSON.stringify(classroomDatabase));
+      localStorage.setItem('nt_gsheet_webhook_v4', googleSheetWebhook);
     }
 
-    // Default Seed Classroom
     function generateInitialClassroom() {
       classroomDatabase = [
-        { id: "1", name: "ด.ช. ภัทรพล สิทธิกุล", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🦸‍♂️", completed: 35, accuracy: 88, scores: { num: 95, ops: 90, frac: 80, meas: 85, geo: 90, data: 90 }, feedback: "เก่งมากเรื่องการคิดเลขเร็ว ฝึกเรื่องโจทย์ระคนเพิ่มอีกนิดนะ", feedbackDate: "เมื่อวาน" },
-        { id: "2", name: "ด.ญ. พิชญา ธนโชติ", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🧙‍♀️", completed: 48, accuracy: 94, scores: { num: 100, ops: 95, frac: 90, meas: 95, geo: 90, data: 95 }, feedback: "ยอดเยี่ยมมาก ผลงานระดับเหรียญทองแล้วค่ะ รักษามาตรฐานนี้นะคะ", feedbackDate: "วันนี้ 08:30" },
-        { id: "3", name: "ด.ช. ธนกฤต ปัญญาดี", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🚀", completed: 20, accuracy: 55, scores: { num: 65, ops: 60, frac: 40, meas: 50, geo: 60, data: 55 }, feedback: "ลองฝึกทำโจทย์เรื่อง 'เศษส่วน' ซ้ำอีกรอบนะลูก ครูพร้อมช่วยอธิบายจ้ะ", feedbackDate: "27 ส.ค." },
-        { id: "4", name: "ด.ญ. ชนัญชิดา วงศ์สว่าง", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🐱", completed: 30, accuracy: 78, scores: { num: 85, ops: 80, frac: 70, meas: 75, geo: 80, data: 80 }, feedback: "ทักษะเรขาคณิตและแผนภูมิดีมาก พัฒนาขึ้นเยอะเลยค่ะ", feedbackDate: "28 ส.ค." }
+        { id: "1", name: "ด.ช. ภัทรพล สิทธิกุล", no: "1", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🦸‍♂️", completed: 35, accuracy: 88, scores: { num: 95, ops: 90, frac: 80, meas: 85, geo: 90, data: 90 }, feedback: "เก่งมากเรื่องการคิดเลขเร็ว ฝึกเรื่องโจทย์ระคนเพิ่มอีกนิดนะ", feedbackDate: "เมื่อวาน" },
+        { id: "2", name: "ด.ญ. พิชญา ธนโชติ", no: "2", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🧙‍♀️", completed: 48, accuracy: 94, scores: { num: 100, ops: 95, frac: 90, meas: 95, geo: 90, data: 95 }, feedback: "ยอดเยี่ยมมาก ผลงานระดับเหรียญทองแล้วค่ะ รักษามาตรฐานนี้นะคะ", feedbackDate: "วันนี้ 08:30" },
+        { id: "3", name: "ด.ช. ธนกฤต ปัญญาดี", no: "3", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🚀", completed: 20, accuracy: 55, scores: { num: 65, ops: 60, frac: 40, meas: 50, geo: 60, data: 55 }, feedback: "ลองฝึกทำโจทย์เรื่อง 'เศษส่วน' ซ้ำอีกรอบนะลูก ครูพร้อมช่วยอธิบายจ้ะ", feedbackDate: "27 ส.ค." },
+        { id: "4", name: "ด.ญ. ชนัญชิดา วงศ์สว่าง", no: "4", room: "ป.3/1", school: "โรงเรียนสาธิตประถมศึกษา", avatar: "🐱", completed: 30, accuracy: 78, scores: { num: 85, ops: 80, frac: 70, meas: 75, geo: 80, data: 80 }, feedback: "ทักษะเรขาคณิตและแผนภูมิดีมาก พัฒนาขึ้นเยอะเลยค่ะ", feedbackDate: "28 ส.ค." }
       ];
       saveStorage();
     }
 
-    function generateDemoClassroom() {
-      generateInitialClassroom();
-      renderTeacherPortal();
-      confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
+    // Check URL Magic Link Parameters (Auto Login for Student)
+    function checkUrlMagicLink() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('student') || urlParams.has('sid')) {
+        const sid = urlParams.get('sid') || '1';
+        const name = urlParams.get('student') || urlParams.get('name') || 'นักเรียนคนเก่ง';
+        const room = urlParams.get('room') || 'ป.3/1';
+        const no = urlParams.get('no') || sid;
+        const avatar = urlParams.get('avatar') || '🦸‍♂️';
+        const school = urlParams.get('school') || 'โรงเรียนประถมศึกษา';
+
+        currentStudent = { id: sid, name: decodeURIComponent(name), room: decodeURIComponent(room), no: no, avatar: avatar, school: decodeURIComponent(school) };
+        currentAppRole = 'student';
+
+        // Load or initialize student's personal record
+        const savedStudentProg = localStorage.getItem('nt_student_prog_' + sid);
+        if (savedStudentProg) {
+          try { currentStudentProgress = JSON.parse(savedStudentProg); } catch(e) {}
+        }
+        return true;
+      }
+      return false;
     }
 
-    // ================= AUTH & ROLE MANAGEMENT =================
-    function setAuthRole(role) {
-      currentAuthRole = role;
-      document.getElementById('tabRoleStudent').className = role === 'student'
-        ? "py-2 text-xs font-black rounded-lg transition bg-white text-indigo-600 shadow-sm"
-        : "py-2 text-xs font-black rounded-lg transition text-slate-600 hover:text-slate-900";
-      
-      document.getElementById('tabRoleTeacher').className = role === 'teacher'
-        ? "py-2 text-xs font-black rounded-lg transition bg-white text-indigo-600 shadow-sm"
-        : "py-2 text-xs font-black rounded-lg transition text-slate-600 hover:text-slate-900";
-
-      document.getElementById('studentExtraFields').style.display = role === 'student' ? 'grid' : 'none';
-    }
-
-    function quickLoginAs(role) {
-      if (role === 'student') {
-        currentUser = {
-          role: 'student',
-          name: 'น้องอลิซ สุขใจ',
-          no: '15',
-          room: 'ป.3/1',
-          school: 'โรงเรียนสาธิตประถมศึกษา',
-          avatar: '🦸‍♂️'
-        };
+    // Switch between Teacher and Student view manually
+    function toggleRoleSwitch() {
+      if (currentAppRole === 'teacher') {
+        // Switch to student view using the first student or current student
+        if (!currentStudent && classroomDatabase.length > 0) {
+          const s = classroomDatabase[0];
+          currentStudent = { id: s.id, name: s.name, no: s.no || s.id, room: s.room, school: s.school, avatar: s.avatar };
+        } else if (!currentStudent) {
+          currentStudent = { id: '1', name: 'น้องอลิซ สุขใจ', no: '1', room: 'ป.3/1', school: 'โรงเรียนสาธิต', avatar: '🦸‍♂️' };
+        }
+        currentAppRole = 'student';
+        initStudentPortal();
       } else {
-        currentUser = {
-          role: 'teacher',
-          name: 'ครูสมศรี ใจดี',
-          no: '',
-          room: 'หัวหน้ากลุ่มสาระคณิตศาสตร์',
-          school: 'โรงเรียนสาธิตประถมศึกษา',
-          avatar: '🎓'
-        };
-      }
-      saveStorage();
-      startAppSession();
-    }
-
-    function handleAuthSubmit(e) {
-      e.preventDefault();
-      const name = document.getElementById('authName').value.trim();
-      const no = document.getElementById('authNo').value.trim() || '1';
-      const room = document.getElementById('authRoom').value.trim() || (currentAuthRole === 'student' ? 'ป.3/1' : 'ครูประจำชั้น');
-      const school = document.getElementById('authSchool').value.trim() || 'โรงเรียนประถมศึกษา';
-
-      currentUser = {
-        role: currentAuthRole,
-        name: name,
-        no: no,
-        room: room,
-        school: school,
-        avatar: currentAuthRole === 'student' ? '🦸‍♂️' : '🎓'
-      };
-      saveStorage();
-      startAppSession();
-    }
-
-    function startAppSession() {
-      if (!currentUser) return;
-      document.getElementById('view-auth').classList.add('hidden');
-      document.getElementById('mainNavbar').classList.remove('hidden');
-
-      // Update Nav
-      document.getElementById('navAvatar').innerText = currentUser.avatar;
-      document.getElementById('navUserName').innerText = currentUser.name;
-      document.getElementById('userSubtitle').innerText = `${currentUser.name} • ${currentUser.room}`;
-
-      if (currentUser.role === 'teacher') {
-        document.getElementById('roleBadge').className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black";
-        document.getElementById('roleBadge').innerText = "คุณครู / Teacher";
-        document.getElementById('studentAppContainer').classList.add('hidden');
-        document.getElementById('teacherAppContainer').classList.remove('hidden');
-        renderTeacherPortal();
-      } else {
-        document.getElementById('roleBadge').className = "text-[10px] sm:text-xs px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 font-extrabold";
-        document.getElementById('roleBadge').innerText = "นักเรียน / Student";
-        document.getElementById('teacherAppContainer').classList.add('hidden');
-        document.getElementById('studentAppContainer').classList.remove('hidden');
-        renderStudentPortal();
+        currentAppRole = 'teacher';
+        initTeacherPortal();
       }
     }
 
-    function logout() {
-      if (confirm("ต้องการออกจากระบบหรือไม่?")) {
-        currentUser = null;
-        localStorage.removeItem('nt_app_current_user');
-        document.getElementById('mainNavbar').classList.add('hidden');
-        document.getElementById('studentAppContainer').classList.add('hidden');
-        document.getElementById('teacherAppContainer').classList.add('hidden');
-        document.getElementById('view-auth').classList.remove('hidden');
-      }
-    }
-
-    function handleLogoClick() {
-      if (!currentUser) return;
-      if (currentUser.role === 'teacher') {
-        renderTeacherPortal();
+    function handleNavbarBrandClick() {
+      if (currentAppRole === 'teacher') {
+        renderTeacherDashboard();
       } else {
         switchStudentView('home');
       }
     }
 
-    // ================= STUDENT LOGIC =================
-    function renderStudentPortal() {
-      document.getElementById('studentGreetingName').innerText = currentUser.name;
-      
-      // Update Teacher Feedback Card
-      const myClassRecord = classroomDatabase.find(s => s.name === currentUser.name);
-      if (myClassRecord && myClassRecord.feedback) {
-        document.getElementById('studentFeedbackContent').innerText = `"${myClassRecord.feedback}"`;
-        document.getElementById('feedbackDate').innerText = myClassRecord.feedbackDate || "ล่าสุด";
+    // =========================================================================
+    // TEACHER CENTER LOGIC
+    // =========================================================================
+    function initTeacherPortal() {
+      document.getElementById('studentPortalContainer').classList.add('hidden');
+      document.getElementById('teacherPortalContainer').classList.remove('hidden');
+
+      // Update Top Nav
+      document.getElementById('navRoleBadge').className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black";
+      document.getElementById('navRoleBadge').innerText = "ครูผู้สอน / Teacher";
+      document.getElementById('navSubtitle').innerText = "ศูนย์ควบคุมครู • ห้องเรียน ป.3";
+      document.getElementById('switchRoleNavText').innerText = 'สลับไปหน้า "นักเรียน"';
+
+      document.getElementById('scratchpadNavBtn').classList.add('hidden');
+      document.getElementById('ttsNavBtn').classList.add('hidden');
+
+      renderTeacherDashboard();
+    }
+
+    function renderTeacherDashboard() {
+      const students = classroomDatabase;
+      const total = students.length;
+      let sumAcc = 0;
+      let needHelp = 0;
+      const catAvgs = { num: 0, ops: 0, frac: 0, meas: 0, geo: 0, data: 0 };
+
+      students.forEach(s => {
+        sumAcc += (s.accuracy || 0);
+        if (s.accuracy < 60) needHelp++;
+        categories.forEach(c => {
+          catAvgs[c.id] += (s.scores && s.scores[c.id] !== undefined) ? s.scores[c.id] : 50;
+        });
+      });
+
+      const classAvg = total > 0 ? Math.round(sumAcc / total) : 0;
+      categories.forEach(c => { catAvgs[c.id] = total > 0 ? Math.round(catAvgs[c.id] / total) : 50; });
+
+      document.getElementById('tKpiTotalStudents').innerText = total;
+      document.getElementById('tKpiClassAvg').innerText = `${classAvg}%`;
+      document.getElementById('tKpiTotalQuestions').innerText = questions.length;
+      document.getElementById('tKpiNeedHelp').innerText = needHelp;
+
+      renderTeacherCharts(catAvgs);
+      renderTeacherStudentRoster(students);
+    }
+
+    function renderTeacherCharts(catAvgs) {
+      const labels = categories.map(c => currentLang === 'th' ? c.th : c.en);
+      const dataValues = categories.map(c => catAvgs[c.id]);
+
+      // Classroom Spider Chart
+      const ctxRadar = document.getElementById('teacherClassRadarChart').getContext('2d');
+      if (teacherClassRadar) teacherClassRadar.destroy();
+      teacherClassRadar = new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'ค่าเฉลี่ยห้องเรียน',
+              data: dataValues,
+              backgroundColor: 'rgba(99, 102, 241, 0.3)',
+              borderColor: 'rgba(99, 102, 241, 1)',
+              borderWidth: 2.5,
+              pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+              pointRadius: 4
+            },
+            {
+              label: 'เป้าหมายมาตรฐาน (80%)',
+              data: [80, 80, 80, 80, 80, 80],
+              borderColor: 'rgba(245, 158, 11, 0.7)',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { r: { min: 0, max: 100, ticks: { display: false, stepSize: 25 }, pointLabels: { font: { size: 11, weight: 'bold' } } } }
+        }
+      });
+
+      // Classroom Topic Bar
+      const ctxBar = document.getElementById('teacherTopicBarChart').getContext('2d');
+      if (teacherTopicBar) teacherTopicBar.destroy();
+      teacherTopicBar = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'คะแนนเฉลี่ย (%)',
+            data: dataValues,
+            backgroundColor: dataValues.map(v => v >= 80 ? 'rgba(16, 185, 129, 0.85)' : v >= 60 ? 'rgba(59, 130, 246, 0.85)' : 'rgba(239, 68, 68, 0.85)'),
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { min: 0, max: 100 } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function renderTeacherStudentRoster(students) {
+      const tbody = document.getElementById('teacherStudentRosterBody');
+      tbody.innerHTML = '';
+
+      if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">ยังไม่มีรายชื่อนักเรียนในห้อง กดปุ่ม "+ เพิ่มนักเรียน" เพื่อเริ่มสร้างลิงก์</td></tr>`;
+        return;
+      }
+
+      const baseUrl = window.location.origin + window.location.pathname;
+
+      students.forEach((s, idx) => {
+        let lowestCat = "-";
+        if (s.scores) {
+          let minVal = 999;
+          categories.forEach(c => {
+            const v = s.scores[c.id] || 0;
+            if (v < minVal) { minVal = v; lowestCat = c.th; }
+          });
+        }
+
+        // Magic link URL for this specific student
+        const magicUrl = `${baseUrl}?sid=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.name)}&no=${encodeURIComponent(s.no||s.id)}&room=${encodeURIComponent(s.room)}&avatar=${encodeURIComponent(s.avatar||'🦸‍♂️')}`;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-bold text-slate-500">${s.no || s.id || (idx + 1)}</td>
+          <td class="py-3 px-3 font-bold text-slate-800 flex items-center gap-2">
+            <span class="text-base">${s.avatar || '🦸‍♂️'}</span>
+            <span>${s.name}</span>
+          </td>
+          <td class="py-3 px-3 text-slate-500">${s.room || 'ป.3/1'}</td>
+          <td class="py-3 px-3 text-center font-bold text-indigo-600">${s.completed || 0} ข้อ</td>
+          <td class="py-3 px-3 text-center">
+            <span class="px-2.5 py-1 rounded-full text-xs font-black ${s.accuracy >= 80 ? 'bg-emerald-100 text-emerald-800' : (s.accuracy >= 60 ? 'bg-blue-100 text-blue-800' : 'bg-rose-100 text-rose-800')}">
+              ${s.accuracy || 0}%
+            </span>
+          </td>
+          <td class="py-3 px-3 text-center text-rose-600 font-semibold truncate max-w-[110px]">${lowestCat}</td>
+          <td class="py-3 px-3 text-center">
+            <button onclick="copySingleStudentLink('${magicUrl}', '${s.name}')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-700 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 mx-auto">
+              <i class="fa-solid fa-link"></i> คัดลอกลิงก์
+            </button>
+          </td>
+          <td class="py-3 px-3 text-center space-x-1">
+            <button onclick="openTeacherFeedbackModal(${idx})" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition" title="ฟีดแบค & Spider Chart">
+              <i class="fa-solid fa-comment-dots"></i> ฟีดแบค
+            </button>
+            <button onclick="deleteStudent(${idx})" class="p-1.5 text-slate-400 hover:text-rose-600 transition" title="ลบนักเรียน">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterTeacherStudentTable() {
+      const q = document.getElementById('teacherStudentSearch').value.toLowerCase().trim();
+      const filtered = classroomDatabase.filter(s => 
+        (s.name && s.name.toLowerCase().includes(q)) || 
+        (s.no && String(s.no).includes(q)) ||
+        (s.room && s.room.toLowerCase().includes(q))
+      );
+      renderTeacherStudentRoster(filtered);
+    }
+
+    function copySingleStudentLink(url, name) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert(`คัดลอกลิงก์สำหรับ "${name}" เรียบร้อยแล้ว! สามารถนำไปส่งให้นักเรียนใน LINE ได้ทันที`);
+      });
+    }
+
+    function copyAllStudentLinksForLine() {
+      if (classroomDatabase.length === 0) {
+        alert("ยังไม่มีรายชื่อนักเรียน");
+        return;
+      }
+      const baseUrl = window.location.origin + window.location.pathname;
+      let text = "📚 ลิงก์เข้าทำแบบทดสอบคณิตศาสตร์ NT ป.3 ประจำตัวนักเรียน:\n\n";
+      classroomDatabase.forEach(s => {
+        const magicUrl = `${baseUrl}?sid=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.name)}&no=${encodeURIComponent(s.no||s.id)}&room=${encodeURIComponent(s.room)}&avatar=${encodeURIComponent(s.avatar||'🦸‍♂️')}`;
+        text += `• เลขที่ ${s.no || s.id} ${s.name}:\n${magicUrl}\n\n`;
+      });
+      navigator.clipboard.writeText(text).then(() => {
+        alert("คัดลอกรายชื่อและลิงก์ของนักเรียนทุกคนเรียบร้อย! สามารถกดวาง (Paste) ส่งเข้า LINE กลุ่มห้องเรียนได้ทันที");
+      });
+    }
+
+    function exportClassroomCSV() {
+      if (classroomDatabase.length === 0) {
+        alert("ยังไม่มีข้อมูลนักเรียน");
+        return;
+      }
+      let csv = "﻿No,Name,Classroom,School,Completed_Questions,Accuracy_Percentage,Numbers,Operations,Fractions,Measurement,Geometry,Data,Feedback
+";
+      classroomDatabase.forEach((s, i) => {
+        const sc = s.scores || {};
+        csv += `"${s.no || s.id || (i+1)}","${s.name}","${s.room}","${s.school || ''}",${s.completed || 0},${s.accuracy || 0},${sc.num || 0},${sc.ops || 0},${sc.frac || 0},${sc.meas || 0},${sc.geo || 0},${sc.data || 0},"${(s.feedback || '').replace(/"/g, '""')}"
+`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `NT_Math_Classroom_Report_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+
+    function deleteStudent(idx) {
+      if (confirm(`คุณครูต้องการลบ "${classroomDatabase[idx].name}" ออกจากห้องเรียนหรือไม่?`)) {
+        classroomDatabase.splice(idx, 1);
+        saveStorage();
+        renderTeacherDashboard();
+      }
+    }
+
+    // Add Student Modal Handlers
+    function openAddStudentModal() {
+      document.getElementById('addStudentModal').classList.remove('hidden');
+    }
+    function closeAddStudentModal() {
+      document.getElementById('addStudentModal').classList.add('hidden');
+    }
+    function handleAddNewStudent(e) {
+      e.preventDefault();
+      const name = document.getElementById('newStudentName').value.trim();
+      const no = document.getElementById('newStudentNo').value.trim();
+      const room = document.getElementById('newStudentRoom').value.trim() || 'ป.3/1';
+      const newSid = 'std_' + Date.now();
+
+      const newStudent = {
+        id: newSid,
+        name: name,
+        no: no,
+        room: room,
+        school: 'โรงเรียนประถมศึกษา',
+        avatar: availableAvatars[Math.floor(Math.random() * availableAvatars.length)],
+        completed: 0,
+        accuracy: 0,
+        scores: { num: 50, ops: 50, frac: 50, meas: 50, geo: 50, data: 50 },
+        feedback: "ยินดีต้อนรับสู่ระบบ NT Math Hero! ขอให้สนุกกับการฝึกทำโจทย์นะลูก",
+        feedbackDate: "ล่าสุด"
+      };
+
+      classroomDatabase.push(newStudent);
+      saveStorage();
+      closeAddStudentModal();
+      document.getElementById('newStudentName').value = '';
+      document.getElementById('newStudentNo').value = '';
+      renderTeacherDashboard();
+
+      // Show generated link immediately
+      const baseUrl = window.location.origin + window.location.pathname;
+      const magicUrl = `${baseUrl}?sid=${encodeURIComponent(newStudent.id)}&name=${encodeURIComponent(newStudent.name)}&no=${encodeURIComponent(newStudent.no)}&room=${encodeURIComponent(newStudent.room)}&avatar=${encodeURIComponent(newStudent.avatar)}`;
+      copySingleStudentLink(magicUrl, newStudent.name);
+    }
+
+    // Teacher Feedback Modal Handlers
+    function openTeacherFeedbackModal(idx) {
+      activeStudentFeedbackIdx = idx;
+      const s = classroomDatabase[idx];
+      if (!s) return;
+
+      document.getElementById('modalAvatar').innerText = s.avatar || "🦸‍♂️";
+      document.getElementById('modalStudentName').innerText = s.name;
+      document.getElementById('modalStudentMeta').innerText = `${s.room} (เลขที่ ${s.no || s.id}) • ${s.school || 'โรงเรียน'}`;
+      document.getElementById('modalTotalQ').innerText = `${s.completed || 0} ข้อ`;
+      document.getElementById('modalAccuracy').innerText = `${s.accuracy || 0}%`;
+      document.getElementById('modalFeedbackInput').value = s.feedback || "";
+
+      // Modal Radar
+      const labels = categories.map(c => currentLang === 'th' ? c.th : c.en);
+      const dataValues = categories.map(c => (s.scores && s.scores[c.id] !== undefined) ? s.scores[c.id] : 50);
+
+      const ctx = document.getElementById('modalStudentRadarChart').getContext('2d');
+      if (modalStudentRadar) modalStudentRadar.destroy();
+      modalStudentRadar = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: s.name,
+            data: dataValues,
+            backgroundColor: 'rgba(79, 70, 229, 0.3)',
+            borderColor: 'rgba(79, 70, 229, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(79, 70, 229, 1)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { r: { min: 0, max: 100, ticks: { display: false } } },
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      document.getElementById('teacherFeedbackModal').classList.remove('hidden');
+    }
+
+    function closeTeacherFeedbackModal() {
+      document.getElementById('teacherFeedbackModal').classList.add('hidden');
+    }
+
+    function saveStudentFeedback() {
+      if (activeStudentFeedbackIdx === null) return;
+      const text = document.getElementById('modalFeedbackInput').value.trim();
+      classroomDatabase[activeStudentFeedbackIdx].feedback = text;
+      classroomDatabase[activeStudentFeedbackIdx].feedbackDate = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+      saveStorage();
+      closeTeacherFeedbackModal();
+      renderTeacherDashboard();
+      alert("บันทึกฟีดแบคสำเร็จ! นักเรียนจะเห็นข้อความนี้บนหน้าจอทันที");
+    }
+
+    // ================= QUESTION ITEM BANK MANAGER & IN-APP EDITOR =================
+    function openQuestionManagerModal() {
+      renderQuestionManagerList();
+      document.getElementById('questionManagerModal').classList.remove('hidden');
+    }
+    function closeQuestionManagerModal() {
+      document.getElementById('questionManagerModal').classList.add('hidden');
+    }
+
+    function renderQuestionManagerList(filterList) {
+      const container = document.getElementById('questionManagerList');
+      container.innerHTML = '';
+      const list = filterList || questions;
+
+      if (list.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-slate-400">ไม่พบข้อสอบที่ตรงกับการค้นหา</div>';
+        return;
+      }
+
+      list.forEach((q, idx) => {
+        const catObj = categories.find(c => c.id === q.cat_id) || categories[0];
+        const card = document.createElement('div');
+        card.className = "p-4 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-white transition flex items-start justify-between gap-3 text-xs";
+        
+        card.innerHTML = `
+          <div class="space-y-1.5 flex-grow">
+            <div class="flex items-center gap-2">
+              <span class="font-black px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700">#${q.id}</span>
+              <span class="font-bold px-2 py-0.5 rounded-md bg-slate-200 text-slate-700">${catObj.th}</span>
+            </div>
+            <div class="font-bold text-slate-800 text-sm leading-relaxed">${q.question_th}</div>
+            ${q.question_en ? `<div class="text-slate-500 italic text-xs">${q.question_en}</div>` : ''}
+            <div class="grid grid-cols-2 gap-2 pt-1 font-medium text-slate-600">
+              <div class="${q.answer === 0 ? 'text-emerald-700 font-black' : ''}">ก. ${q.options_th[0]} ${q.answer === 0 ? '✓ (ถูกต้อง)' : ''}</div>
+              <div class="${q.answer === 1 ? 'text-emerald-700 font-black' : ''}">ข. ${q.options_th[1]} ${q.answer === 1 ? '✓ (ถูกต้อง)' : ''}</div>
+              <div class="${q.answer === 2 ? 'text-emerald-700 font-black' : ''}">ค. ${q.options_th[2]} ${q.answer === 2 ? '✓ (ถูกต้อง)' : ''}</div>
+              <div class="${q.answer === 3 ? 'text-emerald-700 font-black' : ''}">ง. ${q.options_th[3]} ${q.answer === 3 ? '✓ (ถูกต้อง)' : ''}</div>
+            </div>
+            ${q.explanation_th ? `<div class="text-[11px] text-indigo-600 pt-0.5">💡 วิธีคิด: ${q.explanation_th}</div>` : ''}
+          </div>
+          <div class="flex flex-col gap-1.5 flex-shrink-0">
+            <button onclick="openEditSingleQuestionModal(${q.id})" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl transition flex items-center gap-1">
+              <i class="fa-solid fa-pen-to-square"></i> แก้ไข
+            </button>
+            <button onclick="deleteSingleQuestion(${q.id})" class="p-1.5 text-slate-400 hover:text-rose-600 transition" title="ลบข้อนี้">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function filterQuestionManagerList() {
+      const qText = document.getElementById('qSearchInput').value.toLowerCase().trim();
+      const cat = document.getElementById('qCategoryFilter').value;
+
+      const filtered = questions.filter(q => {
+        const matchCat = cat === 'all' || q.cat_id === cat;
+        const matchText = (q.question_th && q.question_th.toLowerCase().includes(qText)) || 
+                          (q.question_en && q.question_en.toLowerCase().includes(qText)) ||
+                          String(q.id).includes(qText);
+        return matchCat && matchText;
+      });
+      renderQuestionManagerList(filtered);
+    }
+
+    function openAddNewQuestionForm() {
+      document.getElementById('editQId').value = '';
+      document.getElementById('singleQModalTitle').innerText = 'เพิ่มข้อสอบใหม่เข้าคลัง';
+      document.getElementById('singleQuestionForm').reset();
+      document.getElementById('singleQuestionEditModal').classList.remove('hidden');
+    }
+
+    function openEditSingleQuestionModal(qId) {
+      const q = questions.find(item => item.id === qId);
+      if (!q) return;
+
+      document.getElementById('editQId').value = q.id;
+      document.getElementById('singleQModalTitle').innerText = `แก้ไขข้อสอบข้อที่ #${q.id}`;
+      document.getElementById('editQCategory').value = q.cat_id || 'num';
+      document.getElementById('editQTextTh').value = q.question_th || '';
+      document.getElementById('editQTextEn').value = q.question_en || '';
+      document.getElementById('editQOpt0').value = q.options_th[0] || '';
+      document.getElementById('editQOpt1').value = q.options_th[1] || '';
+      document.getElementById('editQOpt2').value = q.options_th[2] || '';
+      document.getElementById('editQOpt3').value = q.options_th[3] || '';
+      document.getElementById('editQExplanation').value = q.explanation_th || '';
+
+      const rad = document.getElementById(`radOpt${q.answer}`);
+      if (rad) rad.checked = true;
+
+      document.getElementById('singleQuestionEditModal').classList.remove('hidden');
+    }
+
+    function closeSingleQuestionEditModal() {
+      document.getElementById('singleQuestionEditModal').classList.add('hidden');
+    }
+
+    function handleSaveSingleQuestion(e) {
+      e.preventDefault();
+      const qId = document.getElementById('editQId').value;
+      const catId = document.getElementById('editQCategory').value;
+      const catObj = categories.find(c => c.id === catId) || categories[0];
+      const qTextTh = document.getElementById('editQTextTh').value.trim();
+      const qTextEn = document.getElementById('editQTextEn').value.trim() || qTextTh;
+      const opt0 = document.getElementById('editQOpt0').value.trim();
+      const opt1 = document.getElementById('editQOpt1').value.trim();
+      const opt2 = document.getElementById('editQOpt2').value.trim();
+      const opt3 = document.getElementById('editQOpt3').value.trim();
+      const correctIdx = parseInt(document.querySelector('input[name="editQCorrect"]:checked').value);
+      const exp = document.getElementById('editQExplanation').value.trim() || "คำตอบที่ถูกต้อง";
+
+      if (qId) {
+        // Edit existing
+        const idx = questions.findIndex(item => item.id === parseInt(qId));
+        if (idx >= 0) {
+          questions[idx] = {
+            ...questions[idx],
+            cat_id: catId,
+            category_th: catObj.th,
+            category_en: catObj.en,
+            question_th: qTextTh,
+            question_en: qTextEn,
+            options_th: [opt0, opt1, opt2, opt3],
+            options_en: [opt0, opt1, opt2, opt3],
+            answer: correctIdx,
+            explanation_th: exp,
+            explanation_en: exp
+          };
+        }
       } else {
-        document.getElementById('studentFeedbackContent').innerText = `"${studentProgress.feedback}"`;
-        document.getElementById('feedbackDate').innerText = studentProgress.feedbackDate || "ล่าสุด";
+        // Add new
+        const newQ = {
+          id: questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1,
+          cat_id: catId,
+          category_th: catObj.th,
+          category_en: catObj.en,
+          type: "mcq",
+          question_th: qTextTh,
+          question_en: qTextEn,
+          options_th: [opt0, opt1, opt2, opt3],
+          options_en: [opt0, opt1, opt2, opt3],
+          answer: correctIdx,
+          explanation_th: exp,
+          explanation_en: exp
+        };
+        questions.push(newQ);
+      }
+
+      saveStorage();
+      closeSingleQuestionEditModal();
+      filterQuestionManagerList();
+      document.getElementById('tKpiTotalQuestions').innerText = questions.length;
+      confetti({ particleCount: 30, spread: 50, origin: { y: 0.7 } });
+    }
+
+    function deleteSingleQuestion(qId) {
+      if (confirm(`คุณครูต้องการลบข้อสอบข้อที่ #${qId} หรือไม่?`)) {
+        questions = questions.filter(q => q.id !== qId);
+        saveStorage();
+        filterQuestionManagerList();
+        document.getElementById('tKpiTotalQuestions').innerText = questions.length;
+      }
+    }
+
+    // ================= BULK IMPORT & TEMPLATES =================
+    function openBulkImportModal() {
+      document.getElementById('bulkImportModal').classList.remove('hidden');
+    }
+    function closeBulkImportModal() {
+      document.getElementById('bulkImportModal').classList.add('hidden');
+    }
+
+    function downloadQuestionTemplateCSV() {
+      let csv = "﻿Category_ID,Question_TH,Question_EN,Choice_A,Choice_B,Choice_C,Choice_D,Correct_Choice,Explanation
+";
+      csv += "num,จำนวน แปดหมื่นเก้าสิบห้า เขียนในรูปกระจายได้อย่างไร,How is eighty thousand and ninety-five written in expanded form?,80000 + 90 + 5,80000 + 900 + 5,8000 + 90 + 5,80000 + 900 + 50,A,80000 + 90 + 5
+";
+      csv += "ops,ผลบวกของ 23456 + 14321 มีค่าเท่าใด,What is the sum of 23456 + 14321?,37777,37677,38777,36777,A,23456 + 14321 = 37777
+";
+      csv += "frac,รูปวงกลมแบ่งเป็น 4 ส่วนเท่ากัน ระบายสี 1 ส่วน คิดเป็นเศษส่วนเท่าใด,A circle is divided into 4 parts with 1 shaded. What is the fraction?,1/4,2/4,3/4,4/4,A,ส่วนที่แรเงาคือ 1 จาก 4 ส่วน
+";
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `NT_Math_Question_Template.csv`;
+      link.click();
+    }
+
+    function processBulkImport() {
+      const fileInput = document.getElementById('bulkFileInput');
+      const wordText = document.getElementById('bulkWordText').value.trim();
+
+      if (fileInput.files && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+          let addedCount = 0;
+          let startId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1;
+
+          // Skip header row
+          for (let i = 1; i < rows.length; i++) {
+            const r = rows[i];
+            if (r && r[1]) {
+              const catId = (r[0] || 'num').toString().trim().toLowerCase();
+              const catObj = categories.find(c => c.id === catId) || categories[0];
+              const qTh = r[1].toString().trim();
+              const qEn = (r[2] || qTh).toString().trim();
+              const optA = (r[3] || 'A').toString().trim();
+              const optB = (r[4] || 'B').toString().trim();
+              const optC = (r[5] || 'C').toString().trim();
+              const optD = (r[6] || 'D').toString().trim();
+              const correctLetter = (r[7] || 'A').toString().trim().toUpperCase();
+              const correctIdx = correctLetter === 'B' ? 1 : (correctLetter === 'C' ? 2 : (correctLetter === 'D' ? 3 : 0));
+              const exp = (r[8] || 'คำตอบที่ถูกต้อง').toString().trim();
+
+              questions.push({
+                id: startId++,
+                cat_id: catId,
+                category_th: catObj.th,
+                category_en: catObj.en,
+                type: "mcq",
+                question_th: qTh,
+                question_en: qEn,
+                options_th: [optA, optB, optC, optD],
+                options_en: [optA, optB, optC, optD],
+                answer: correctIdx,
+                explanation_th: exp,
+                explanation_en: exp
+              });
+              addedCount++;
+            }
+          }
+
+          saveStorage();
+          closeBulkImportModal();
+          filterQuestionManagerList();
+          document.getElementById('tKpiTotalQuestions').innerText = questions.length;
+          confetti({ particleCount: 60, spread: 80, origin: { y: 0.6 } });
+          alert(`นำเข้าข้อสอบจากไฟล์ Excel สำเร็จทั้งหมด ${addedCount} ข้อ!`);
+        };
+        reader.readAsArrayBuffer(file);
+      } else if (wordText) {
+        // Parse Word Text Block
+        let addedCount = 0;
+        let startId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1;
+        const blocks = wordText.split(/(?=\[Q\])/i);
+
+        blocks.forEach(block => {
+          if (block.includes('[Q]')) {
+            const qMatch = block.match(/\[Q\]\s*(.*?)(?=
+|\[)/is);
+            const enMatch = block.match(/\[EN\]\s*(.*?)(?=
+|\[)/is);
+            const aMatch = block.match(/\[A\]\s*(.*?)(?=
+|\[)/is);
+            const bMatch = block.match(/\[B\]\s*(.*?)(?=
+|\[)/is);
+            const cMatch = block.match(/\[C\]\s*(.*?)(?=
+|\[)/is);
+            const dMatch = block.match(/\[D\]\s*(.*?)(?=
+|\[)/is);
+            const expMatch = block.match(/\[EXP\]\s*(.*?)(?=
+|\[|$)/is);
+
+            if (qMatch) {
+              const qTh = qMatch[1].trim();
+              const qEn = enMatch ? enMatch[1].trim() : qTh;
+              let optA = aMatch ? aMatch[1].trim() : 'ก';
+              let optB = bMatch ? bMatch[1].trim() : 'ข';
+              let optC = cMatch ? cMatch[1].trim() : 'ค';
+              let optD = dMatch ? dMatch[1].trim() : 'ง';
+
+              let correctIdx = 0;
+              if (optA.includes('*')) { correctIdx = 0; optA = optA.replace('*', '').trim(); }
+              if (optB.includes('*')) { correctIdx = 1; optB = optB.replace('*', '').trim(); }
+              if (optC.includes('*')) { correctIdx = 2; optC = optC.replace('*', '').trim(); }
+              if (optD.includes('*')) { correctIdx = 3; optD = optD.replace('*', '').trim(); }
+
+              const exp = expMatch ? expMatch[1].trim() : "คำตอบที่ถูกต้อง";
+
+              questions.push({
+                id: startId++,
+                cat_id: "ops",
+                category_th: "การคำนวณพื้นฐาน",
+                category_en: "Basic Operations",
+                type: "mcq",
+                question_th: qTh,
+                question_en: qEn,
+                options_th: [optA, optB, optC, optD],
+                options_en: [optA, optB, optC, optD],
+                answer: correctIdx,
+                explanation_th: exp,
+                explanation_en: exp
+              });
+              addedCount++;
+            }
+          }
+        });
+
+        saveStorage();
+        closeBulkImportModal();
+        filterQuestionManagerList();
+        document.getElementById('tKpiTotalQuestions').innerText = questions.length;
+        confetti({ particleCount: 60, spread: 80, origin: { y: 0.6 } });
+        alert(`นำเข้าข้อสอบจากข้อความ Word สำเร็จ ${addedCount} ข้อ!`);
+      } else {
+        alert("กรุณาเลือกไฟล์ Excel/CSV หรือวางข้อความข้อสอบก่อนกดยืนยัน");
+      }
+    }
+
+    // ================= GOOGLE SHEETS CONFIG & WEBHOOK =================
+    function openGoogleSheetsConfigModal() {
+      document.getElementById('googleSheetWebhookUrl').value = googleSheetWebhook;
+      document.getElementById('googleSheetsConfigModal').classList.remove('hidden');
+    }
+    function closeGoogleSheetsConfigModal() {
+      document.getElementById('googleSheetsConfigModal').classList.add('hidden');
+    }
+    function saveGoogleSheetsConfig() {
+      googleSheetWebhook = document.getElementById('googleSheetWebhookUrl').value.trim();
+      saveStorage();
+      closeGoogleSheetsConfigModal();
+      alert("บันทึกการเชื่อมต่อ Google Sheets เรียบร้อยแล้ว!");
+    }
+    function copyAppsScriptCode() {
+      const code = document.getElementById('appsScriptCodeBlock').value;
+      navigator.clipboard.writeText(code).then(() => {
+        alert("คัดลอกโค้ด Google Apps Script แล้ว! นำไปวางใน Extensions -> Apps Script บน Google Sheets ของคุณครูได้เลย");
+      });
+    }
+
+    // =========================================================================
+    // STUDENT PORTAL LOGIC & AUTO-LOGIN
+    // =========================================================================
+    function initStudentPortal() {
+      document.getElementById('teacherPortalContainer').classList.add('hidden');
+      document.getElementById('studentPortalContainer').classList.remove('hidden');
+
+      // Update Top Nav
+      document.getElementById('navRoleBadge').className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 font-extrabold";
+      document.getElementById('navRoleBadge').innerText = "นักเรียน / Student";
+      document.getElementById('navSubtitle').innerText = `${currentStudent.name} (เลขที่ ${currentStudent.no || currentStudent.id}) • ${currentStudent.room}`;
+      document.getElementById('switchRoleNavText').innerText = 'สลับไปหน้า "คุณครู"';
+
+      document.getElementById('scratchpadNavBtn').classList.remove('hidden');
+      document.getElementById('ttsNavBtn').classList.remove('hidden');
+
+      // Greeting & Feedback
+      document.getElementById('studentGreetingName').innerText = currentStudent.name;
+
+      // Sync latest teacher feedback from classroom database
+      const myRecord = classroomDatabase.find(s => s.id === currentStudent.id || s.name === currentStudent.name);
+      if (myRecord && myRecord.feedback) {
+        document.getElementById('studentFeedbackText').innerText = `"${myRecord.feedback}"`;
+        document.getElementById('studentFeedbackDate').innerText = myRecord.feedbackDate || "ล่าสุด";
       }
 
       updateStudentStats();
@@ -996,16 +1820,25 @@
     }
 
     function updateStudentStats() {
-      const completedCount = Object.keys(studentProgress.completedQuestions).length;
+      const completedCount = Object.keys(currentStudentProgress.completedQuestions).length;
       let correct = 0;
-      Object.values(studentProgress.completedQuestions).forEach(v => { if (v.isCorrect) correct++; });
+      Object.values(currentStudentProgress.completedQuestions).forEach(v => { if (v.isCorrect) correct++; });
       const acc = completedCount > 0 ? Math.round((correct / completedCount) * 100) : 0;
 
-      document.getElementById('statCompleted').innerText = `${completedCount}/${questions.length}`;
-      document.getElementById('statAccuracy').innerText = `${acc}%`;
+      document.getElementById('studentStatCompleted').innerText = `${completedCount}/${questions.length}`;
+      document.getElementById('studentStatAccuracy').innerText = `${acc}%`;
 
-      // Auto-sync into classroom database for Teacher to see!
-      syncStudentToClassroom();
+      // Save student record
+      localStorage.setItem('nt_student_prog_' + currentStudent.id, JSON.stringify(currentStudentProgress));
+
+      // Auto update classroom roster
+      const idx = classroomDatabase.findIndex(s => s.id === currentStudent.id || s.name === currentStudent.name);
+      if (idx >= 0) {
+        classroomDatabase[idx].completed = completedCount;
+        classroomDatabase[idx].accuracy = acc;
+        classroomDatabase[idx].scores = getStudentCompetencyScores();
+        saveStorage();
+      }
     }
 
     function getStudentCompetencyScores() {
@@ -1015,44 +1848,14 @@
         let correct = 0;
         let attempted = 0;
         catQuestions.forEach(q => {
-          if (studentProgress.completedQuestions[q.id]) {
+          if (currentStudentProgress.completedQuestions[q.id]) {
             attempted++;
-            if (studentProgress.completedQuestions[q.id].isCorrect) correct++;
+            if (currentStudentProgress.completedQuestions[q.id].isCorrect) correct++;
           }
         });
         catScores[cat.id] = attempted > 0 ? Math.round((correct / attempted) * 100) : 50;
       });
       return catScores;
-    }
-
-    function syncStudentToClassroom() {
-      if (!currentUser || currentUser.role !== 'student') return;
-      const completedCount = Object.keys(studentProgress.completedQuestions).length;
-      let correct = 0;
-      Object.values(studentProgress.completedQuestions).forEach(v => { if (v.isCorrect) correct++; });
-      const acc = completedCount > 0 ? Math.round((correct / completedCount) * 100) : 0;
-      const scores = getStudentCompetencyScores();
-
-      const existingIndex = classroomDatabase.findIndex(s => s.name === currentUser.name);
-      const studentData = {
-        id: currentUser.no || String(existingIndex >= 0 ? existingIndex + 1 : classroomDatabase.length + 1),
-        name: currentUser.name,
-        room: currentUser.room,
-        school: currentUser.school,
-        avatar: currentUser.avatar,
-        completed: completedCount,
-        accuracy: acc,
-        scores: scores,
-        feedback: existingIndex >= 0 ? classroomDatabase[existingIndex].feedback : studentProgress.feedback,
-        feedbackDate: existingIndex >= 0 ? classroomDatabase[existingIndex].feedbackDate : "ล่าสุด"
-      };
-
-      if (existingIndex >= 0) {
-        classroomDatabase[existingIndex] = studentData;
-      } else {
-        classroomDatabase.unshift(studentData);
-      }
-      saveStorage();
     }
 
     function updateStudentRadarChart() {
@@ -1112,9 +1915,9 @@
         let completed = 0;
         let correct = 0;
         catQuestions.forEach(q => {
-          if (studentProgress.completedQuestions[q.id]) {
+          if (currentStudentProgress.completedQuestions[q.id]) {
             completed++;
-            if (studentProgress.completedQuestions[q.id].isCorrect) correct++;
+            if (currentStudentProgress.completedQuestions[q.id].isCorrect) correct++;
           }
         });
         const acc = completed > 0 ? Math.round((correct / completed) * 100) : 0;
@@ -1191,7 +1994,7 @@
 
     function startWeaknessExam() {
       activeQuiz.mode = 'weakness';
-      const missedIds = Object.keys(studentProgress.completedQuestions).filter(id => !studentProgress.completedQuestions[id].isCorrect);
+      const missedIds = Object.keys(currentStudentProgress.completedQuestions).filter(id => !currentStudentProgress.completedQuestions[id].isCorrect);
       let list = questions.filter(q => missedIds.includes(String(q.id)));
       if (list.length === 0) {
         list = [...questions].sort(() => 0.5 - Math.random()).slice(0, 15);
@@ -1209,6 +2012,7 @@
       renderQuizQuestion();
     }
 
+    // ================= QUESTION PALETTE & PROGRESS ENGINE =================
     function renderQuizQuestion() {
       const q = activeQuiz.questionList[activeQuiz.currentIndex];
       if (!q) return;
@@ -1222,6 +2026,7 @@
       document.getElementById('quizCategoryLabel').innerText = currentLang === 'th' ? catMeta.th : catMeta.en;
       document.getElementById('questionText').innerHTML = currentLang === 'th' ? (q.question_th || q.question_en) : (q.question_en || q.question_th);
 
+      // Render Options
       const optsContainer = document.getElementById('optionsContainer');
       optsContainer.innerHTML = '';
       const opts = currentLang === 'th' ? (q.options_th || q.options_en) : (q.options_en || q.options_th);
@@ -1262,6 +2067,7 @@
         optsContainer.appendChild(btn);
       });
 
+      // Explanation box
       const expBox = document.getElementById('explanationBox');
       if (activeQuiz.mode === 'topic' && selectedAns !== undefined) {
         expBox.classList.remove('hidden');
@@ -1274,10 +2080,56 @@
         expBox.classList.add('hidden');
       }
 
+      // Prev/Next/Finish buttons
       document.getElementById('prevBtn').disabled = activeQuiz.currentIndex === 0;
       const isLast = activeQuiz.currentIndex === activeQuiz.questionList.length - 1;
       document.getElementById('nextBtn').classList.toggle('hidden', isLast);
       document.getElementById('finishBtn').classList.toggle('hidden', !isLast);
+
+      // Render Question Palette Grid
+      renderQuestionPalette();
+    }
+
+    function renderQuestionPalette() {
+      const grid = document.getElementById('questionPaletteGrid');
+      grid.innerHTML = '';
+      let answeredCount = 0;
+
+      activeQuiz.questionList.forEach((q, idx) => {
+        const isAnswered = activeQuiz.userAnswers[q.id] !== undefined;
+        if (isAnswered) answeredCount++;
+
+        const isCurrent = idx === activeQuiz.currentIndex;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        
+        let styleClasses = "w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-xs font-black transition flex items-center justify-center ";
+        
+        if (isAnswered) {
+          // 🟢 สีเขียว: ทำแล้ว
+          styleClasses += "bg-emerald-600 text-white shadow-sm ";
+        } else {
+          // ⚪ สีดำ/ขาว: ยังไม่ทำ
+          styleClasses += "bg-slate-800 text-white hover:bg-slate-700 ";
+        }
+
+        if (isCurrent) {
+          // 🔵 สีฟ้ากรอบหนา: ข้อปัจจุบัน
+          styleClasses += "ring-4 ring-indigo-400 ring-offset-1 scale-105 ";
+        }
+
+        btn.className = styleClasses;
+        btn.innerHTML = `${idx + 1}`;
+        btn.onclick = () => {
+          activeQuiz.currentIndex = idx;
+          renderQuizQuestion();
+        };
+
+        grid.appendChild(btn);
+      });
+
+      document.getElementById('paletteAnsweredCount').innerText = answeredCount;
+      document.getElementById('paletteUnansweredCount').innerText = activeQuiz.questionList.length - answeredCount;
     }
 
     function selectQuizAnswer(optIdx) {
@@ -1285,13 +2137,12 @@
       activeQuiz.userAnswers[q.id] = optIdx;
 
       const isCorrect = optIdx === q.answer;
-      studentProgress.completedQuestions[q.id] = {
+      currentStudentProgress.completedQuestions[q.id] = {
         isCorrect: isCorrect,
         selectedOption: optIdx,
         timestamp: Date.now()
       };
-      saveStorage();
-      syncStudentToClassroom();
+      updateStudentStats();
 
       if (isCorrect && activeQuiz.mode === 'topic') {
         confetti({ particleCount: 25, spread: 50, origin: { y: 0.8 } });
@@ -1303,6 +2154,21 @@
     function navigateQuestion(delta) {
       activeQuiz.currentIndex += delta;
       renderQuizQuestion();
+    }
+
+    function submitQuizWithVerification() {
+      const unanswered = [];
+      activeQuiz.questionList.forEach((q, idx) => {
+        if (activeQuiz.userAnswers[q.id] === undefined) unanswered.push(idx + 1);
+      });
+
+      if (unanswered.length > 0) {
+        if (confirm(`คุณยังมีข้อสอบที่ยังไม่ได้ตอบทั้งหมด ${unanswered.length} ข้อ (ข้อที่: ${unanswered.join(', ')}) คุณต้องการส่งคำตอบทันทีหรือไม่?`)) {
+          submitQuiz();
+        }
+      } else {
+        submitQuiz();
+      }
     }
 
     function submitQuiz() {
@@ -1324,6 +2190,26 @@
       document.getElementById('resTime').innerText = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
 
       updateStudentStats();
+
+      // ================= GOOGLE SHEETS LIVE POST =================
+      if (googleSheetWebhook) {
+        try {
+          fetch(googleSheetWebhook, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              student_name: currentStudent.name,
+              room: currentStudent.room,
+              no: currentStudent.no,
+              score: correct,
+              total: total,
+              accuracy: acc,
+              scores: getStudentCompetencyScores()
+            })
+          });
+        } catch(e) { console.log('Sheets Sync error:', e); }
+      }
 
       if (acc >= 80) {
         confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
@@ -1425,273 +2311,37 @@
       });
     }
 
-    // ================= TEACHER LOGIC =================
-    function renderTeacherPortal() {
-      document.getElementById('teacherGreetingName').innerText = currentUser.name;
-      document.getElementById('tKpiTotalQuestions').innerText = questions.length;
-
-      const students = classroomDatabase;
-      const total = students.length;
-      let sumAcc = 0;
-      let needHelp = 0;
-      const catAvgs = { num: 0, ops: 0, frac: 0, meas: 0, geo: 0, data: 0 };
-
-      students.forEach(s => {
-        sumAcc += (s.accuracy || 0);
-        if (s.accuracy < 60) needHelp++;
-        categories.forEach(c => {
-          catAvgs[c.id] += (s.scores && s.scores[c.id] !== undefined) ? s.scores[c.id] : 50;
-        });
-      });
-
-      const classAvg = total > 0 ? Math.round(sumAcc / total) : 0;
-      categories.forEach(c => { catAvgs[c.id] = total > 0 ? Math.round(catAvgs[c.id] / total) : 50; });
-
-      document.getElementById('tKpiTotalStudents').innerText = total;
-      document.getElementById('tKpiClassAvg').innerText = `${classAvg}%`;
-      document.getElementById('tKpiNeedHelp').innerText = needHelp;
-
-      // Render Charts
-      renderTeacherCharts(catAvgs);
-      renderTeacherRoster(students);
+    // Student Edit Self Profile
+    let studentSelfAvatar = '🦸‍♂️';
+    function openEditStudentProfileModal() {
+      studentSelfAvatar = currentStudent.avatar || '🦸‍♂️';
+      document.getElementById('editStudentSelfName').value = currentStudent.name;
+      renderStudentAvatarPicker();
+      document.getElementById('editStudentProfileModal').classList.remove('hidden');
     }
-
-    function renderTeacherCharts(catAvgs) {
-      const labels = categories.map(c => currentLang === 'th' ? c.th : c.en);
-      const dataValues = categories.map(c => catAvgs[c.id]);
-
-      const ctxRadar = document.getElementById('teacherClassRadarChart').getContext('2d');
-      if (teacherClassRadar) teacherClassRadar.destroy();
-      teacherClassRadar = new Chart(ctxRadar, {
-        type: 'radar',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'ค่าเฉลี่ยห้องเรียน',
-              data: dataValues,
-              backgroundColor: 'rgba(99, 102, 241, 0.3)',
-              borderColor: 'rgba(99, 102, 241, 1)',
-              borderWidth: 2.5,
-              pointBackgroundColor: 'rgba(99, 102, 241, 1)',
-              pointRadius: 4
-            },
-            {
-              label: 'เป้าหมายมาตรฐาน (80%)',
-              data: [80, 80, 80, 80, 80, 80],
-              borderColor: 'rgba(245, 158, 11, 0.7)',
-              borderDash: [5, 5],
-              borderWidth: 1.5,
-              fill: false
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { r: { min: 0, max: 100, ticks: { display: false, stepSize: 25 } } }
-        }
-      });
-
-      const ctxBar = document.getElementById('teacherTopicBarChart').getContext('2d');
-      if (teacherTopicBar) teacherTopicBar.destroy();
-      teacherTopicBar = new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'คะแนนเฉลี่ย (%)',
-            data: dataValues,
-            backgroundColor: dataValues.map(v => v >= 80 ? 'rgba(16, 185, 129, 0.85)' : v >= 60 ? 'rgba(59, 130, 246, 0.85)' : 'rgba(239, 68, 68, 0.85)'),
-            borderRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { y: { min: 0, max: 100 } },
-          plugins: { legend: { display: false } }
-        }
+    function closeEditStudentProfileModal() {
+      document.getElementById('editStudentProfileModal').classList.add('hidden');
+    }
+    function renderStudentAvatarPicker() {
+      const c = document.getElementById('studentAvatarPicker');
+      c.innerHTML = '';
+      availableAvatars.forEach(av => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = "w-9 h-9 rounded-xl text-lg flex items-center justify-center transition " + 
+          (studentSelfAvatar === av ? "bg-indigo-600 text-white shadow scale-110" : "bg-slate-100");
+        btn.innerText = av;
+        btn.onclick = () => { studentSelfAvatar = av; renderStudentAvatarPicker(); };
+        c.appendChild(btn);
       });
     }
-
-    function renderTeacherRoster(students) {
-      const tbody = document.getElementById('teacherRosterTbody');
-      tbody.innerHTML = '';
-
-      if (students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">ยังไม่มีข้อมูลนักเรียนในห้อง</td></tr>`;
-        return;
-      }
-
-      students.forEach((s, idx) => {
-        let lowestCat = "-";
-        if (s.scores) {
-          let minVal = 999;
-          categories.forEach(c => {
-            const v = s.scores[c.id] || 0;
-            if (v < minVal) { minVal = v; lowestCat = c.th; }
-          });
-        }
-
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50 transition";
-        tr.innerHTML = `
-          <td class="py-3 px-3 sm:px-4 font-bold text-slate-500">${s.id || (idx + 1)}</td>
-          <td class="py-3 px-3 sm:px-4 font-bold text-slate-800 flex items-center gap-2">
-            <span>${s.avatar || '🦸‍♂️'}</span>
-            <span>${s.name}</span>
-          </td>
-          <td class="py-3 px-3 sm:px-4 text-slate-500">${s.room || 'ป.3/1'}</td>
-          <td class="py-3 px-3 sm:px-4 text-center font-bold text-indigo-600">${s.completed || 0} ข้อ</td>
-          <td class="py-3 px-3 sm:px-4 text-center">
-            <span class="px-2.5 py-1 rounded-full text-xs font-black ${s.accuracy >= 80 ? 'bg-emerald-100 text-emerald-800' : (s.accuracy >= 60 ? 'bg-blue-100 text-blue-800' : 'bg-rose-100 text-rose-800')}">
-              ${s.accuracy || 0}%
-            </span>
-          </td>
-          <td class="py-3 px-3 sm:px-4 text-center text-rose-600 font-semibold truncate max-w-[120px]">${lowestCat}</td>
-          <td class="py-3 px-3 sm:px-4 text-xs text-slate-500 truncate max-w-[150px]">${s.feedback || '-'}</td>
-          <td class="py-3 px-3 sm:px-4 text-center">
-            <button onclick="openTeacherFeedbackModal(${idx})" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition">
-              <i class="fa-solid fa-comment-dots"></i> ให้ฟีดแบค / ชาร์ต
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function filterTeacherStudentTable() {
-      const q = document.getElementById('teacherSearchInput').value.toLowerCase().trim();
-      const filtered = classroomDatabase.filter(s => 
-        (s.name && s.name.toLowerCase().includes(q)) || 
-        (s.id && String(s.id).includes(q))
-      );
-      renderTeacherRoster(filtered);
-    }
-
-    // Teacher Feedback Modal
-    function openTeacherFeedbackModal(idx) {
-      activeStudentIndexForFeedback = idx;
-      const s = classroomDatabase[idx];
-      if (!s) return;
-
-      document.getElementById('modalAvatar').innerText = s.avatar || "🦸‍♂️";
-      document.getElementById('modalStudentName').innerText = s.name;
-      document.getElementById('modalStudentMeta').innerText = `${s.room} (เลขที่ ${s.id}) • ${s.school}`;
-      document.getElementById('modalTotalQ').innerText = `${s.completed || 0} ข้อ`;
-      document.getElementById('modalAccuracy').innerText = `${s.accuracy || 0}%`;
-      document.getElementById('modalFeedbackInput').value = s.feedback || "";
-
-      // Modal Radar
-      const labels = categories.map(c => currentLang === 'th' ? c.th : c.en);
-      const dataValues = categories.map(c => (s.scores && s.scores[c.id] !== undefined) ? s.scores[c.id] : 50);
-
-      const ctx = document.getElementById('modalStudentRadarChart').getContext('2d');
-      if (modalStudentRadar) modalStudentRadar.destroy();
-
-      modalStudentRadar = new Chart(ctx, {
-        type: 'radar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: s.name,
-            data: dataValues,
-            backgroundColor: 'rgba(79, 70, 229, 0.3)',
-            borderColor: 'rgba(79, 70, 229, 1)',
-            borderWidth: 2,
-            pointBackgroundColor: 'rgba(79, 70, 229, 1)'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { r: { min: 0, max: 100, ticks: { display: false } } },
-          plugins: { legend: { display: false } }
-        }
-      });
-
-      document.getElementById('teacherFeedbackModal').classList.remove('hidden');
-    }
-
-    function closeTeacherFeedbackModal() {
-      document.getElementById('teacherFeedbackModal').classList.add('hidden');
-    }
-
-    function saveStudentFeedback() {
-      if (activeStudentIndexForFeedback === null) return;
-      const text = document.getElementById('modalFeedbackInput').value.trim();
-      classroomDatabase[activeStudentIndexForFeedback].feedback = text;
-      classroomDatabase[activeStudentIndexForFeedback].feedbackDate = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
-      saveStorage();
-      closeTeacherFeedbackModal();
-      renderTeacherRoster(classroomDatabase);
-      alert("บันทึกฟีดแบคสำเร็จ! นักเรียนจะเห็นข้อความนี้ในหน้าแดชบอร์ดทันที");
-    }
-
-    // Teacher Add Question Modal
-    function openAddQuestionModal() {
-      document.getElementById('addQuestionModal').classList.remove('hidden');
-    }
-
-    function closeAddQuestionModal() {
-      document.getElementById('addQuestionModal').classList.add('hidden');
-    }
-
-    function handleAddNewQuestion(e) {
+    function handleSaveStudentSelfProfile(e) {
       e.preventDefault();
-      const catId = document.getElementById('newQCategory').value;
-      const catObj = categories.find(c => c.id === catId);
-      const qTextTh = document.getElementById('newQTextTh').value.trim();
-      const qTextEn = document.getElementById('newQTextEn').value.trim() || qTextTh;
-      const opt0 = document.getElementById('newQOpt0').value.trim();
-      const opt1 = document.getElementById('newQOpt1').value.trim();
-      const opt2 = document.getElementById('newQOpt2').value.trim();
-      const opt3 = document.getElementById('newQOpt3').value.trim();
-      const correctIdx = parseInt(document.querySelector('input[name="newQCorrect"]:checked').value);
-      const exp = document.getElementById('newQExplanation').value.trim() || "คำตอบที่ถูกต้อง";
-
-      const newQ = {
-        id: questions.length + 1,
-        cat_id: catId,
-        category_th: catObj.th,
-        category_en: catObj.en,
-        type: "mcq",
-        question_th: qTextTh,
-        question_en: qTextEn,
-        options_th: [opt0, opt1, opt2, opt3],
-        options_en: [opt0, opt1, opt2, opt3],
-        answer: correctIdx,
-        explanation_th: exp,
-        explanation_en: exp
-      };
-
-      questions.push(newQ);
-      saveStorage();
-      closeAddQuestionModal();
-      document.getElementById('addQuestionForm').reset();
-      document.getElementById('tKpiTotalQuestions').innerText = questions.length;
-      confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
-      alert(`เพิ่มข้อสอบข้อที่ ${newQ.id} เข้าสู่คลังสำเร็จเรียบร้อยแล้ว!`);
-    }
-
-    function exportClassroomCSV() {
-      if (classroomDatabase.length === 0) {
-        alert("ยังไม่มีข้อมูลนักเรียนในห้อง");
-        return;
-      }
-      let csv = "﻿No,Name,Classroom,School,Completed_Questions,Accuracy_Percentage,Numbers,Operations,Fractions,Measurement,Geometry,Data,Feedback
-";
-      classroomDatabase.forEach((s, i) => {
-        const sc = s.scores || {};
-        csv += `"${s.id || (i+1)}","${s.name}","${s.room}","${s.school}",${s.completed || 0},${s.accuracy || 0},${sc.num || 0},${sc.ops || 0},${sc.frac || 0},${sc.meas || 0},${sc.geo || 0},${sc.data || 0},"${(s.feedback || '').replace(/"/g, '""')}"
-`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `NT_Math_Classroom_Report_${new Date().toISOString().slice(0,10)}.csv`;
-      link.click();
+      currentStudent.name = document.getElementById('editStudentSelfName').value.trim();
+      currentStudent.avatar = studentSelfAvatar;
+      closeEditStudentProfileModal();
+      initStudentPortal();
+      alert("บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว!");
     }
 
     // ================= UTILITIES & HELPERS =================
@@ -1705,9 +2355,9 @@
         ? "px-2.5 py-1 text-xs font-bold rounded-lg transition-all shadow-sm bg-white text-indigo-600" 
         : "px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-slate-600";
 
-      if (currentUser && currentUser.role === 'teacher') {
-        renderTeacherPortal();
-      } else if (currentUser && currentUser.role === 'student') {
+      if (currentAppRole === 'teacher') {
+        renderTeacherDashboard();
+      } else {
         updateStudentRadarChart();
         renderStudentTopics();
         if (!document.getElementById('view-student-quiz').classList.contains('hidden')) renderQuizQuestion();
@@ -1725,7 +2375,6 @@
       utterance.lang = currentLang === 'th' ? 'th-TH' : 'en-US';
       window.speechSynthesis.speak(utterance);
     }
-
     function toggleAudioSpeech() { speakCurrentQuestion(); }
 
     // Scratchpad
@@ -1783,13 +2432,17 @@
       if (!modal.classList.contains('hidden')) setTimeout(initScratchpad, 60);
     }
 
-    // App Initialization
+    // ================= INITIALIZATION =================
     window.onload = function() {
       loadStorage();
-      if (currentUser) {
-        startAppSession();
+
+      // Check if entering via Student Magic Link
+      const isStudentLink = checkUrlMagicLink();
+      if (isStudentLink) {
+        initStudentPortal();
       } else {
-        document.getElementById('view-auth').classList.remove('hidden');
+        // Default: Start at Teacher Center
+        initTeacherPortal();
       }
     };
   </script>
