@@ -98,19 +98,23 @@
       </div>
 
       <div class="flex items-center space-x-1.5 sm:space-x-3">
+        <!-- Switch Role Nav Button (Only visible for Teacher) -->
         <button id="switchRoleNavBtn" onclick="toggleRoleSwitch()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm bg-slate-100 hover:bg-indigo-50 text-indigo-700 border border-slate-200">
           <i class="fa-solid fa-arrows-rotate"></i>
           <span id="switchRoleNavText">สลับไปหน้า "นักเรียน"</span>
         </button>
 
+        <!-- Scratchpad (Student Mode) -->
         <button id="scratchpadNavBtn" onclick="toggleScratchpad()" class="hidden p-2 bg-amber-50 active:bg-amber-200 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold transition shadow-sm" title="กระดานทดเลข">
           <i class="fa-solid fa-pencil text-sm"></i>
         </button>
 
+        <!-- TTS Read Button (Student Mode) -->
         <button id="ttsNavBtn" onclick="toggleAudioSpeech()" class="hidden p-2 text-slate-600 active:text-indigo-600 active:bg-slate-100 rounded-xl transition" title="อ่านโจทย์">
           <i class="fa-solid fa-volume-high text-base"></i>
         </button>
 
+        <!-- Bilingual Switcher Toggle -->
         <div class="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
           <button id="langThBtn" onclick="setLanguage('th')" class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all shadow-sm bg-white text-indigo-600">
             🇹🇭 TH
@@ -123,8 +127,12 @@
     </div>
   </header>
 
-  <!-- SECTION A: TEACHER CONTROL CENTER -->
+  <!-- ========================================================================= -->
+  <!-- SECTION A: TEACHER CONTROL CENTER (เริ่มต้นด้วยหน้านี้เสมอ)                 -->
+  <!-- ========================================================================= -->
   <main id="teacherPortalContainer" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+
+    <!-- Teacher Hero Banner -->
     <div class="relative overflow-hidden rounded-3xl gradient-teacher text-white p-5 sm:p-8 shadow-xl">
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="space-y-2">
@@ -181,7 +189,7 @@
       </div>
     </div>
 
-    <!-- Classroom Spider Chart & Topic Difficulty Breakdown -->
+    <!-- Classroom Spider Chart & Topic Breakdown -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col">
         <div class="flex items-center justify-between mb-2">
@@ -267,9 +275,15 @@
     </div>
   </main>
 
-  <!-- SECTION B: STUDENT PORTAL -->
+  <!-- ========================================================================= -->
+  <!-- SECTION B: STUDENT PORTAL (ไม่มีปุ่มสลับกลับหน้าครู & ตัดคำบรรยายยืดยาวออก) -->
+  <!-- ========================================================================= -->
   <main id="studentPortalContainer" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 hidden space-y-6">
+
+    <!-- STUDENT VIEW 1: DASHBOARD / HOME -->
     <section id="view-student-home" class="space-y-4 sm:space-y-6 view-transition">
+      
+      <!-- Student Personalized Hero Banner -->
       <div class="relative overflow-hidden rounded-3xl gradient-hero text-white p-5 sm:p-8 shadow-xl">
         <div class="relative z-10 max-w-2xl space-y-3">
           <div class="flex items-center gap-2">
@@ -284,9 +298,6 @@
           <h2 class="text-xl sm:text-3xl font-black leading-tight">
             สวัสดี <span id="studentGreetingName" class="text-amber-300">น้องอลิซ</span>! พร้อมพิชิตข้อสอบหรือยัง?
           </h2>
-          <p class="text-indigo-100 text-xs sm:text-sm">
-            คลังข้อสอบมาตรฐาน 105+ ข้อ พร้อมพาเลทตัวเลขตรวจข้อที่ทำแล้ว และ Spider Chart วิเคราะห์ทักษะ
-          </p>
           <div class="pt-2 flex flex-wrap gap-2.5">
             <button onclick="startMockExam()" class="touch-btn px-5 py-2.5 rounded-xl bg-white text-indigo-600 font-bold text-xs sm:text-sm shadow-md active:scale-95 transition flex items-center gap-2">
               <i class="fa-solid fa-stopwatch text-indigo-500"></i>
@@ -300,6 +311,7 @@
         </div>
       </div>
 
+      <!-- Teacher Feedback Card -->
       <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-amber-500 flex items-start gap-3">
         <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl flex-shrink-0">
           🎓
@@ -315,6 +327,7 @@
         </div>
       </div>
 
+      <!-- Quick Stats & Radar Preview -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col justify-between">
           <div>
@@ -358,6 +371,7 @@
         </div>
       </div>
 
+      <!-- Action Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 pt-1">
         <div onclick="switchStudentView('topics')" class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm active:scale-[0.99] transition cursor-pointer border-t-4 border-indigo-500">
           <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg mb-2">
@@ -421,6 +435,7 @@
         </div>
       </div>
 
+      <!-- Question Card -->
       <div class="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-md space-y-4 sm:space-y-6 relative">
         <div class="flex items-start justify-between gap-3">
           <div class="space-y-1.5 flex-grow">
@@ -568,6 +583,8 @@
     </section>
   </main>
 
+  <!-- ================= MODALS ================= -->
+
   <!-- MODAL 1: QUESTION MANAGER & EDITOR -->
   <div id="questionManagerModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
@@ -708,21 +725,24 @@
         </button>
       </div>
 
+      <!-- Step 1: Download Template (Multi-sheet Excel with Category Reference) -->
       <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
         <div class="flex items-center justify-between">
-          <div class="font-bold text-xs text-slate-800">ขั้นตอนที่ 1: ดาวน์โหลดไฟล์ Template มาตรฐาน</div>
-          <button onclick="downloadQuestionTemplateCSV()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-download"></i> ดาวน์โหลด Excel/CSV Template
+          <div class="font-bold text-xs text-slate-800">ขั้นตอนที่ 1: ดาวน์โหลดไฟล์ Excel Template (มีชีต Category_Reference อ้างอิงรหัสหมวดหมู่)</div>
+          <button onclick="downloadQuestionTemplateXLSX()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-download"></i> ดาวน์โหลด Excel Template (.xlsx)
           </button>
         </div>
-        <p class="text-[11px] text-slate-500">ไฟล์ประกอบด้วยคอลัมน์: Category_ID, Question_TH, Question_EN, Choice_A, Choice_B, Choice_C, Choice_D, Correct_Choice (A,B,C,D), Explanation</p>
+        <p class="text-[11px] text-slate-500">ไฟล์ประกอบด้วย 2 แผ่นงาน: แผ่นแรกสำหรับพิมพ์ข้อสอบ และแผ่นที่สอง (Category_Reference) อธิบายรหัสหมวดหมู่ทั้งหมด</p>
       </div>
 
+      <!-- Step 2: Upload File -->
       <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-2.5">
         <div class="font-bold text-xs text-emerald-900">ขั้นตอนที่ 2: อัปโหลดไฟล์ Excel (.xlsx) หรือ .csv ที่กรอกข้อสอบแล้ว</div>
         <input type="file" id="bulkFileInput" accept=".csv, .xlsx, .xls" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
       </div>
 
+      <!-- Step 3: Copy-paste Word text -->
       <div class="space-y-1.5">
         <label class="font-bold text-slate-700 text-xs block">หรือ วางข้อความจาก Word ตามรูปแบบ:</label>
         <textarea id="bulkWordText" rows="4" placeholder="[Q] 45 + 50 เท่ากับเท่าใด&#10;[A] 85&#10;[B] 95*&#10;[C] 100&#10;[D] 90&#10;[EXP] 45 + 50 = 95" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-mono"></textarea>
@@ -770,11 +790,16 @@
               <i class="fa-regular fa-copy"></i> คัดลอกโค้ด
             </button>
           </div>
-          <textarea id="appsScriptCodeBlock" readonly rows="5" class="w-full p-2 rounded-lg bg-slate-800 text-emerald-400 font-mono text-[10px]">function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  sheet.appendRow([new Date(), data.student_name, data.room, data.no, data.score, data.total, data.accuracy + '%', JSON.stringify(data.scores)]);
-  return ContentService.createTextOutput(JSON.stringify({result: 'success'})).setMimeType(ContentService.MimeType.JSON);
+          <textarea id="appsScriptCodeBlock" readonly rows="7" class="w-full p-2 rounded-lg bg-slate-800 text-emerald-400 font-mono text-[10px]">function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    var sc = data.scores || {};
+    sheet.appendRow([new Date(), data.student_name, data.room, data.no, data.score, data.total, data.accuracy + '%', sc.num || '-', sc.ops || '-', sc.frac || '-', sc.meas || '-', sc.geo || '-', sc.data || '-']);
+    return ContentService.createTextOutput(JSON.stringify({status: 'success'})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status: 'error', message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
 }</textarea>
         </div>
       </div>
@@ -946,7 +971,8 @@
     let currentAppRole = 'teacher';
     let currentStudent = null;
     let currentLang = 'th';
-    let googleSheetWebhook = '';
+    // Pre-filled with user's verified Google Apps Script URL
+    let googleSheetWebhook = 'https://script.google.com/macros/s/AKfycbyEeY_C6dCJD8FUCcKtFUxnVscuFFG6sqQg468r_xreQO0gsTPnf48bPITt9ttBo0tpNw/exec';
     let activeStudentFeedbackIdx = null;
 
     let currentStudentProgress = {
@@ -983,12 +1009,12 @@
 
     function loadStorage() {
       try {
-        const savedQuestions = localStorage.getItem('nt_questions_v4');
+        const savedQuestions = localStorage.getItem('nt_questions_v5');
         if (savedQuestions) questions = JSON.parse(savedQuestions);
       } catch(e) { console.warn(e); }
 
       try {
-        const savedClass = localStorage.getItem('nt_classroom_v4');
+        const savedClass = localStorage.getItem('nt_classroom_v5');
         if (savedClass) {
           classroomDatabase = JSON.parse(savedClass);
         } else {
@@ -999,16 +1025,16 @@
       }
 
       try {
-        const savedWebhook = localStorage.getItem('nt_gsheet_webhook_v4');
+        const savedWebhook = localStorage.getItem('nt_gsheet_webhook_v5');
         if (savedWebhook) googleSheetWebhook = savedWebhook;
       } catch(e) {}
     }
 
     function saveStorage() {
       try {
-        localStorage.setItem('nt_questions_v4', JSON.stringify(questions));
-        localStorage.setItem('nt_classroom_v4', JSON.stringify(classroomDatabase));
-        localStorage.setItem('nt_gsheet_webhook_v4', googleSheetWebhook);
+        localStorage.setItem('nt_questions_v5', JSON.stringify(questions));
+        localStorage.setItem('nt_classroom_v5', JSON.stringify(classroomDatabase));
+        localStorage.setItem('nt_gsheet_webhook_v5', googleSheetWebhook);
       } catch(e) { console.warn(e); }
     }
 
@@ -1077,7 +1103,13 @@
       document.getElementById('navRoleBadge').className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black";
       document.getElementById('navRoleBadge').innerText = "ครูผู้สอน / Teacher";
       document.getElementById('navSubtitle').innerText = "ศูนย์ควบคุมครู • ห้องเรียน ป.3";
-      document.getElementById('switchRoleNavText').innerText = 'สลับไปหน้า "นักเรียน"';
+      
+      // Teacher can see switch role button
+      const switchBtn = document.getElementById('switchRoleNavBtn');
+      if (switchBtn) {
+        switchBtn.classList.remove('hidden');
+        document.getElementById('switchRoleNavText').innerText = 'สลับไปหน้า "นักเรียน"';
+      }
 
       document.getElementById('scratchpadNavBtn').classList.add('hidden');
       document.getElementById('ttsNavBtn').classList.add('hidden');
@@ -1566,6 +1598,7 @@
       }
     }
 
+    // ================= MULTI-SHEET EXCEL TEMPLATE DOWNLOAD =================
     function openBulkImportModal() {
       document.getElementById('bulkImportModal').classList.remove('hidden');
     }
@@ -1573,17 +1606,37 @@
       document.getElementById('bulkImportModal').classList.add('hidden');
     }
 
-    function downloadQuestionTemplateCSV() {
-      let csv = "\uFEFFCategory_ID,Question_TH,Question_EN,Choice_A,Choice_B,Choice_C,Choice_D,Correct_Choice,Explanation\n";
-      csv += "num,จำนวน แปดหมื่นเก้าสิบห้า เขียนในรูปกระจายได้อย่างไร,How is eighty thousand and ninety-five written in expanded form?,80000 + 90 + 5,80000 + 900 + 5,8000 + 90 + 5,80000 + 900 + 50,A,80000 + 90 + 5\n";
-      csv += "ops,ผลบวกของ 23456 + 14321 มีค่าเท่าใด,What is the sum of 23456 + 14321?,37777,37677,38777,36777,A,23456 + 14321 = 37777\n";
-      csv += "frac,รูปวงกลมแบ่งเป็น 4 ส่วนเท่ากัน ระบายสี 1 ส่วน คิดเป็นเศษส่วนเท่าใด,A circle is divided into 4 parts with 1 shaded. What is the fraction?,1/4,2/4,3/4,4/4,A,ส่วนที่แรเงาคือ 1 จาก 4 ส่วน\n";
+    function downloadQuestionTemplateXLSX() {
+      // 1. Questions Sheet Data
+      const wsDataQuestions = [
+        ["Category_ID", "Question_TH", "Question_EN", "Choice_A", "Choice_B", "Choice_C", "Choice_D", "Correct_Choice", "Explanation"],
+        ["num", "จำนวน แปดหมื่นเก้าสิบห้า เขียนในรูปกระจายได้อย่างไร", "How is eighty thousand and ninety-five written in expanded form?", "80000 + 90 + 5", "80000 + 900 + 5", "8000 + 90 + 5", "80000 + 900 + 50", "A", "80000 + 90 + 5"],
+        ["ops", "ผลบวกของ 23456 + 14321 มีค่าเท่าใด", "What is the sum of 23456 + 14321?", "37777", "37677", "38777", "36777", "A", "23456 + 14321 = 37777"],
+        ["frac", "รูปวงกลมแบ่งเป็น 4 ส่วนเท่ากัน ระบายสี 1 ส่วน คิดเป็นเศษส่วนเท่าใด", "A circle is divided into 4 parts with 1 shaded. What is the fraction?", "1/4", "2/4", "3/4", "4/4", "A", "ส่วนที่แรเงาคือ 1 จาก 4 ส่วน"],
+        ["meas", "4 กิโลเมตร 500 เมตร คิดเป็นกี่เมตร", "Convert 4 kilometres 500 metres into metres.", "4500 เมตร", "450 เมตร", "45000 เมตร", "4050 เมตร", "A", "1 กิโลเมตร = 1,000 เมตร"],
+        ["geo", "รูปสี่เหลี่ยมจัตุรัสมีแกนสมมาตรทั้งหมดกี่แกน", "How many lines of symmetry does a square have?", "4 แกน", "2 แกน", "1 แกน", "นับไม่ถ้วน", "A", "สี่เหลี่ยมจัตุรัสมีแกนสมมาตร 4 แกน"],
+        ["data", "แผนภูมิรูปภาพ: รูปต้นไม้ 1 รูป แทนต้นไม้ 5 ต้น ถ้ามี 7 รูป มีต้นไม้กี่ต้น", "In a pictogram, 1 tree symbol represents 5 trees. If 7 symbols, how many trees?", "35 ต้น", "12 ต้น", "30 ต้น", "40 ต้น", "A", "7 x 5 = 35 ต้น"]
+      ];
 
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "NT_Math_Question_Template.csv";
-      link.click();
+      // 2. Category Reference Sheet Data
+      const wsDataCategories = [
+        ["Category_ID (รหัสที่ต้องใช้)", "ชื่อหมวดหมู่ภาษาไทย (Category Thai)", "Category English", "ขอบเขตเนื้อหาตามหลักสูตร NT"],
+        ["num", "จำนวนและค่าประจำหลัก / แบบรูป", "Numbers & Place Value", "ค่าประจำหลัก, รูปกระจาย, เปรียบเทียบจำนวนไม่เกิน 100,000, แบบรูปเพิ่ม/ลด"],
+        ["ops", "การคำนวณพื้นฐานและการดำเนินการ", "Basic Operations", "การบวก, ลบ, คูณ, หาร, โจทย์ปัญหา และการคำนวณระคน"],
+        ["frac", "เศษส่วน", "Fractions", "การอ่านเศษส่วน, การเปรียบเทียบเศษส่วน, การบวกลบเศษส่วนที่ตัวส่วนเท่ากัน"],
+        ["meas", "การวัด เวลา และเงิน", "Measurement, Time & Money", "ความยาว (ม./กม./ซม.), น้ำหนัก (กก./กรัม), ปริมาตร (ลิตร/มล.), เวลา, ธนบัตรและเงินทอน"],
+        ["geo", "รูปเรขาคณิตและแกนสมมาตร", "2D Shapes & Symmetry", "รูปเรขาคณิต 2 มิติ, ชนิดของมุม (มุมฉาก), แกนสมมาตรของรูปทรงต่างๆ"],
+        ["data", "การจัดการข้อมูลและโจทย์ปัญหา", "Data Handling & Problem Solving", "แผนภูมิรูปภาพ, ตารางทางเดียว และโจทย์ปัญหาคิดวิเคราะห์"]
+      ];
+
+      const wb = XLSX.utils.book_new();
+      const wsQuestions = XLSX.utils.aoa_to_sheet(wsDataQuestions);
+      const wsCategories = XLSX.utils.aoa_to_sheet(wsDataCategories);
+
+      XLSX.utils.book_append_sheet(wb, wsQuestions, "Questions");
+      XLSX.utils.book_append_sheet(wb, wsCategories, "Category_Reference");
+
+      XLSX.writeFile(wb, "NT_Math_Question_Template_with_Categories.xlsx");
     }
 
     function processBulkImport() {
@@ -1709,6 +1762,7 @@
       }
     }
 
+    // ================= GOOGLE SHEETS CONFIG & WEBHOOK =================
     function openGoogleSheetsConfigModal() {
       document.getElementById('googleSheetWebhookUrl').value = googleSheetWebhook;
       document.getElementById('googleSheetsConfigModal').classList.remove('hidden');
@@ -1733,6 +1787,7 @@
       }
     }
 
+    // ================= STUDENT PORTAL LOGIC & AUTO-LOGIN =================
     function initStudentPortal() {
       document.getElementById('teacherPortalContainer').classList.add('hidden');
       document.getElementById('studentPortalContainer').classList.remove('hidden');
@@ -1740,7 +1795,12 @@
       document.getElementById('navRoleBadge').className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 font-extrabold";
       document.getElementById('navRoleBadge').innerText = "นักเรียน / Student";
       document.getElementById('navSubtitle').innerText = currentStudent.name + " (เลขที่ " + (currentStudent.no || currentStudent.id) + ") • " + currentStudent.room;
-      document.getElementById('switchRoleNavText').innerText = 'สลับไปหน้า "คุณครู"';
+
+      // STRICT REQUIREMENT: HIDE the switch-to-teacher button in student mode
+      const switchBtn = document.getElementById('switchRoleNavBtn');
+      if (switchBtn) {
+        switchBtn.classList.add('hidden');
+      }
 
       document.getElementById('scratchpadNavBtn').classList.remove('hidden');
       document.getElementById('ttsNavBtn').classList.remove('hidden');
@@ -1977,6 +2037,7 @@
       renderQuizQuestion();
     }
 
+    // ================= QUESTION PALETTE & PROGRESS ENGINE =================
     function renderQuizQuestion() {
       const q = activeQuiz.questionList[activeQuiz.currentIndex];
       if (!q) return;
@@ -2149,23 +2210,27 @@
 
       updateStudentStats();
 
+      // ================= ROBUST GOOGLE SHEETS POST =================
       if (googleSheetWebhook) {
+        const payload = {
+          student_name: currentStudent.name,
+          room: currentStudent.room,
+          no: currentStudent.no,
+          score: correct,
+          total: total,
+          accuracy: acc,
+          scores: getStudentCompetencyScores()
+        };
+
+        // Send via fetch (text/plain to prevent CORS preflight blocking in Google Apps Script)
         try {
           fetch(googleSheetWebhook, {
             method: 'POST',
             mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              student_name: currentStudent.name,
-              room: currentStudent.room,
-              no: currentStudent.no,
-              score: correct,
-              total: total,
-              accuracy: acc,
-              scores: getStudentCompetencyScores()
-            })
-          });
-        } catch(e) { console.log('Sheets Sync error:', e); }
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          }).catch(err => console.log('Sheets Sync notice:', err));
+        } catch(e) { console.log('Sheets Sync err:', e); }
       }
 
       if (acc >= 80) {
@@ -2279,6 +2344,7 @@
       }
     }
 
+    // Student Edit Profile Modal Handlers
     let studentSelfAvatar = '🦸‍♂️';
     function openEditStudentProfileModal() {
       studentSelfAvatar = currentStudent.avatar || '🦸‍♂️';
@@ -2311,6 +2377,7 @@
       alert("บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว!");
     }
 
+    // ================= UTILITIES & HELPERS =================
     function setLanguage(lang) {
       currentLang = lang;
       document.getElementById('langThBtn').className = lang === 'th' 
@@ -2343,6 +2410,7 @@
     }
     function toggleAudioSpeech() { speakCurrentQuestion(); }
 
+    // Scratchpad
     let padCanvas, padCtx, isDrawing = false, penColor = '#1e293b';
     function initScratchpad() {
       padCanvas = document.getElementById('scratchpadCanvas');
@@ -2398,6 +2466,7 @@
       if (!modal.classList.contains('hidden')) setTimeout(initScratchpad, 60);
     }
 
+    // ================= INITIALIZATION =================
     window.onload = function() {
       try {
         loadStorage();
