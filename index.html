@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#4f46e5">
-  <title>NT Math Hero - ป.3 ระบบคลังข้อสอบ จัดการเรียนรู้ & Teacher Center</title>
+  <title>NT Math Hero - ป.3 ระบบคลังข้อสอบ & Teacher Center</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Canvas Confetti CDN -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <!-- SheetJS (xlsx.full.min.js) for bulk Excel import/export -->
+  <!-- SheetJS (xlsx.full.min.js) for Excel import/export -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- FontAwesome CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -313,7 +313,7 @@
         </div>
       </div>
 
-      <!-- Teacher Feedback Card (ข้อความที่คุณครูส่งถึงเด็กคนนี้) -->
+      <!-- Teacher Feedback Card -->
       <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-amber-500 flex items-start gap-3">
         <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl flex-shrink-0">
           🎓
@@ -414,10 +414,8 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6" id="studentTopicsGrid"></div>
     </section>
 
-    <!-- STUDENT VIEW 3: QUIZ ARENA (พร้อม Question Palette ตรวจข้อทำแล้ว/ยังไม่ทำ) -->
+    <!-- STUDENT VIEW 3: QUIZ ARENA -->
     <section id="view-student-quiz" class="hidden max-w-3xl mx-auto space-y-4 sm:space-y-6">
-      
-      <!-- Top Quiz Progress & Timer -->
       <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-2.5">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
@@ -459,7 +457,7 @@
         <!-- Options Container -->
         <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 pt-1"></div>
 
-        <!-- Explanation Box in practice mode -->
+        <!-- Explanation Box -->
         <div id="explanationBox" class="hidden rounded-xl sm:rounded-2xl p-4 bg-slate-50 border border-slate-200 space-y-1.5">
           <div class="flex items-center gap-2 font-bold text-xs sm:text-sm" id="feedbackTitle">
             <i class="fa-solid fa-circle-check text-emerald-500"></i>
@@ -488,7 +486,7 @@
         </div>
       </div>
 
-      <!-- ================= QUESTION PALETTE (แถบตัวเลขข้อด้านล่าง ตรวจข้อทำแล้ว/ยังไม่ทำ) ================= -->
+      <!-- ================= QUESTION PALETTE ================= -->
       <div class="glass-card rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
@@ -505,10 +503,7 @@
           </div>
         </div>
 
-        <!-- Dynamic Grid of Question Buttons -->
-        <div id="questionPaletteGrid" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
-          <!-- Rendered via JS -->
-        </div>
+        <div id="questionPaletteGrid" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1"></div>
       </div>
     </section>
 
@@ -520,7 +515,7 @@
         </div>
         <div>
           <h2 class="text-xl sm:text-3xl font-black text-slate-800" id="resultTitle">เก่งมาก! ทำแบบทดสอบสำเร็จ</h2>
-          <p class="text-xs sm:text-sm text-slate-500 mt-0.5" id="resultSubtitle">คะแนนถูกบันทึกและส่งต่อไปยังคุณครูเรียบร้อยแล้ว</p>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">คะแนนถูกบันทึกและส่งต่อไปยังคุณครูเรียบร้อยแล้ว</p>
         </div>
 
         <div class="grid grid-cols-3 gap-2.5 sm:gap-4 max-w-md mx-auto">
@@ -593,11 +588,9 @@
     </section>
   </main>
 
-  <!-- ========================================================================= -->
-  <!-- MODALS & TOOLS                                                            -->
-  <!-- ========================================================================= -->
+  <!-- ================= MODALS ================= -->
 
-  <!-- MODAL 1: QUESTION ITEM BANK MANAGER & IN-APP LIVE EDITOR (ครูแก้ไขข้อสอบทั้งหมดได้) -->
+  <!-- MODAL 1: QUESTION MANAGER & EDITOR -->
   <div id="questionManagerModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -642,14 +635,12 @@
         </div>
       </div>
 
-      <!-- Question List Container (Scrollable) -->
-      <div class="flex-grow overflow-y-auto space-y-3 pr-1" id="questionManagerList">
-        <!-- Rendered via JS -->
-      </div>
+      <!-- Question List Container -->
+      <div class="flex-grow overflow-y-auto space-y-3 pr-1" id="questionManagerList"></div>
     </div>
   </div>
 
-  <!-- MODAL 2: EDIT / ADD SINGLE QUESTION FORM -->
+  <!-- MODAL 2: EDIT / ADD SINGLE QUESTION -->
   <div id="singleQuestionEditModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
     <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -758,7 +749,7 @@
         <input type="file" id="bulkFileInput" accept=".csv, .xlsx, .xls" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
       </div>
 
-      <!-- Step 3 (Optional): Copy-paste Word text -->
+      <!-- Step 3: Copy-paste Word text -->
       <div class="space-y-1.5">
         <label class="font-bold text-slate-700 text-xs block">หรือ วางข้อความจาก Word ตามรูปแบบ:</label>
         <textarea id="bulkWordText" rows="4" placeholder="[Q] 45 + 50 เท่ากับเท่าใด&#10;[A] 85&#10;[B] 95*&#10;[C] 100&#10;[D] 90&#10;[EXP] 45 + 50 = 95" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-mono"></textarea>
@@ -775,7 +766,7 @@
     </div>
   </div>
 
-  <!-- MODAL 4: GOOGLE SHEETS CONFIGURATION (รับผลสอบอัตโนมัติ) -->
+  <!-- MODAL 4: GOOGLE SHEETS CONFIG -->
   <div id="googleSheetsConfigModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 no-print">
     <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1081,7 +1072,6 @@
     // Switch between Teacher and Student view manually
     function toggleRoleSwitch() {
       if (currentAppRole === 'teacher') {
-        // Switch to student view using the first student or current student
         if (!currentStudent && classroomDatabase.length > 0) {
           const s = classroomDatabase[0];
           currentStudent = { id: s.id, name: s.name, no: s.no || s.id, room: s.room, school: s.school, avatar: s.avatar };
@@ -1232,7 +1222,6 @@
           });
         }
 
-        // Magic link URL for this specific student
         const magicUrl = `${baseUrl}?sid=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.name)}&no=${encodeURIComponent(s.no||s.id)}&room=${encodeURIComponent(s.room)}&avatar=${encodeURIComponent(s.avatar||'🦸‍♂️')}`;
 
         const tr = document.createElement('tr');
@@ -1306,12 +1295,10 @@
         alert("ยังไม่มีข้อมูลนักเรียน");
         return;
       }
-      let csv = "﻿No,Name,Classroom,School,Completed_Questions,Accuracy_Percentage,Numbers,Operations,Fractions,Measurement,Geometry,Data,Feedback
-";
+      let csv = "﻿No,Name,Classroom,School,Completed_Questions,Accuracy_Percentage,Numbers,Operations,Fractions,Measurement,Geometry,Data,Feedback\n";
       classroomDatabase.forEach((s, i) => {
         const sc = s.scores || {};
-        csv += `"${s.no || s.id || (i+1)}","${s.name}","${s.room}","${s.school || ''}",${s.completed || 0},${s.accuracy || 0},${sc.num || 0},${sc.ops || 0},${sc.frac || 0},${sc.meas || 0},${sc.geo || 0},${sc.data || 0},"${(s.feedback || '').replace(/"/g, '""')}"
-`;
+        csv += `"${s.no || s.id || (i+1)}","${s.name}","${s.room}","${s.school || ''}",${s.completed || 0},${s.accuracy || 0},${sc.num || 0},${sc.ops || 0},${sc.frac || 0},${sc.meas || 0},${sc.geo || 0},${sc.data || 0},"${(s.feedback || '').replace(/"/g, '""')}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
@@ -1363,7 +1350,6 @@
       document.getElementById('newStudentNo').value = '';
       renderTeacherDashboard();
 
-      // Show generated link immediately
       const baseUrl = window.location.origin + window.location.pathname;
       const magicUrl = `${baseUrl}?sid=${encodeURIComponent(newStudent.id)}&name=${encodeURIComponent(newStudent.name)}&no=${encodeURIComponent(newStudent.no)}&room=${encodeURIComponent(newStudent.room)}&avatar=${encodeURIComponent(newStudent.avatar)}`;
       copySingleStudentLink(magicUrl, newStudent.name);
@@ -1602,14 +1588,10 @@
     }
 
     function downloadQuestionTemplateCSV() {
-      let csv = "﻿Category_ID,Question_TH,Question_EN,Choice_A,Choice_B,Choice_C,Choice_D,Correct_Choice,Explanation
-";
-      csv += "num,จำนวน แปดหมื่นเก้าสิบห้า เขียนในรูปกระจายได้อย่างไร,How is eighty thousand and ninety-five written in expanded form?,80000 + 90 + 5,80000 + 900 + 5,8000 + 90 + 5,80000 + 900 + 50,A,80000 + 90 + 5
-";
-      csv += "ops,ผลบวกของ 23456 + 14321 มีค่าเท่าใด,What is the sum of 23456 + 14321?,37777,37677,38777,36777,A,23456 + 14321 = 37777
-";
-      csv += "frac,รูปวงกลมแบ่งเป็น 4 ส่วนเท่ากัน ระบายสี 1 ส่วน คิดเป็นเศษส่วนเท่าใด,A circle is divided into 4 parts with 1 shaded. What is the fraction?,1/4,2/4,3/4,4/4,A,ส่วนที่แรเงาคือ 1 จาก 4 ส่วน
-";
+      let csv = "﻿Category_ID,Question_TH,Question_EN,Choice_A,Choice_B,Choice_C,Choice_D,Correct_Choice,Explanation\n";
+      csv += "num,จำนวน แปดหมื่นเก้าสิบห้า เขียนในรูปกระจายได้อย่างไร,How is eighty thousand and ninety-five written in expanded form?,80000 + 90 + 5,80000 + 900 + 5,8000 + 90 + 5,80000 + 900 + 50,A,80000 + 90 + 5\n";
+      csv += "ops,ผลบวกของ 23456 + 14321 มีค่าเท่าใด,What is the sum of 23456 + 14321?,37777,37677,38777,36777,A,23456 + 14321 = 37777\n";
+      csv += "frac,รูปวงกลมแบ่งเป็น 4 ส่วนเท่ากัน ระบายสี 1 ส่วน คิดเป็นเศษส่วนเท่าใด,A circle is divided into 4 parts with 1 shaded. What is the fraction?,1/4,2/4,3/4,4/4,A,ส่วนที่แรเงาคือ 1 จาก 4 ส่วน\n";
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
@@ -1635,7 +1617,6 @@
           let addedCount = 0;
           let startId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1;
 
-          // Skip header row
           for (let i = 1; i < rows.length; i++) {
             const r = rows[i];
             if (r && r[1]) {
@@ -1678,27 +1659,19 @@
         };
         reader.readAsArrayBuffer(file);
       } else if (wordText) {
-        // Parse Word Text Block
         let addedCount = 0;
         let startId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1;
         const blocks = wordText.split(/(?=\[Q\])/i);
 
         blocks.forEach(block => {
           if (block.includes('[Q]')) {
-            const qMatch = block.match(/\[Q\]\s*(.*?)(?=
-|\[)/is);
-            const enMatch = block.match(/\[EN\]\s*(.*?)(?=
-|\[)/is);
-            const aMatch = block.match(/\[A\]\s*(.*?)(?=
-|\[)/is);
-            const bMatch = block.match(/\[B\]\s*(.*?)(?=
-|\[)/is);
-            const cMatch = block.match(/\[C\]\s*(.*?)(?=
-|\[)/is);
-            const dMatch = block.match(/\[D\]\s*(.*?)(?=
-|\[)/is);
-            const expMatch = block.match(/\[EXP\]\s*(.*?)(?=
-|\[|$)/is);
+            const qMatch = block.match(/\[Q\]\s*(.*?)(?=\n|\[)/is);
+            const enMatch = block.match(/\[EN\]\s*(.*?)(?=\n|\[)/is);
+            const aMatch = block.match(/\[A\]\s*(.*?)(?=\n|\[)/is);
+            const bMatch = block.match(/\[B\]\s*(.*?)(?=\n|\[)/is);
+            const cMatch = block.match(/\[C\]\s*(.*?)(?=\n|\[)/is);
+            const dMatch = block.match(/\[D\]\s*(.*?)(?=\n|\[)/is);
+            const expMatch = block.match(/\[EXP\]\s*(.*?)(?=\n|\[|$)/is);
 
             if (qMatch) {
               const qTh = qMatch[1].trim();
@@ -1767,9 +1740,7 @@
       });
     }
 
-    // =========================================================================
-    // STUDENT PORTAL LOGIC & AUTO-LOGIN
-    // =========================================================================
+    // ================= STUDENT PORTAL LOGIC & AUTO-LOGIN =================
     function initStudentPortal() {
       document.getElementById('teacherPortalContainer').classList.add('hidden');
       document.getElementById('studentPortalContainer').classList.remove('hidden');
@@ -1786,7 +1757,6 @@
       // Greeting & Feedback
       document.getElementById('studentGreetingName').innerText = currentStudent.name;
 
-      // Sync latest teacher feedback from classroom database
       const myRecord = classroomDatabase.find(s => s.id === currentStudent.id || s.name === currentStudent.name);
       if (myRecord && myRecord.feedback) {
         document.getElementById('studentFeedbackText').innerText = `"${myRecord.feedback}"`;
@@ -2026,7 +1996,6 @@
       document.getElementById('quizCategoryLabel').innerText = currentLang === 'th' ? catMeta.th : catMeta.en;
       document.getElementById('questionText').innerHTML = currentLang === 'th' ? (q.question_th || q.question_en) : (q.question_en || q.question_th);
 
-      // Render Options
       const optsContainer = document.getElementById('optionsContainer');
       optsContainer.innerHTML = '';
       const opts = currentLang === 'th' ? (q.options_th || q.options_en) : (q.options_en || q.options_th);
@@ -2067,7 +2036,6 @@
         optsContainer.appendChild(btn);
       });
 
-      // Explanation box
       const expBox = document.getElementById('explanationBox');
       if (activeQuiz.mode === 'topic' && selectedAns !== undefined) {
         expBox.classList.remove('hidden');
@@ -2080,13 +2048,11 @@
         expBox.classList.add('hidden');
       }
 
-      // Prev/Next/Finish buttons
       document.getElementById('prevBtn').disabled = activeQuiz.currentIndex === 0;
       const isLast = activeQuiz.currentIndex === activeQuiz.questionList.length - 1;
       document.getElementById('nextBtn').classList.toggle('hidden', isLast);
       document.getElementById('finishBtn').classList.toggle('hidden', !isLast);
 
-      // Render Question Palette Grid
       renderQuestionPalette();
     }
 
@@ -2106,15 +2072,12 @@
         let styleClasses = "w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-xs font-black transition flex items-center justify-center ";
         
         if (isAnswered) {
-          // 🟢 สีเขียว: ทำแล้ว
           styleClasses += "bg-emerald-600 text-white shadow-sm ";
         } else {
-          // ⚪ สีดำ/ขาว: ยังไม่ทำ
           styleClasses += "bg-slate-800 text-white hover:bg-slate-700 ";
         }
 
         if (isCurrent) {
-          // 🔵 สีฟ้ากรอบหนา: ข้อปัจจุบัน
           styleClasses += "ring-4 ring-indigo-400 ring-offset-1 scale-105 ";
         }
 
@@ -2191,7 +2154,7 @@
 
       updateStudentStats();
 
-      // ================= GOOGLE SHEETS LIVE POST =================
+      // Post to Google Sheets Webhook
       if (googleSheetWebhook) {
         try {
           fetch(googleSheetWebhook, {
@@ -2311,7 +2274,7 @@
       });
     }
 
-    // Student Edit Self Profile
+    // Student Edit Profile Modal Handlers
     let studentSelfAvatar = '🦸‍♂️';
     function openEditStudentProfileModal() {
       studentSelfAvatar = currentStudent.avatar || '🦸‍♂️';
@@ -2436,12 +2399,10 @@
     window.onload = function() {
       loadStorage();
 
-      // Check if entering via Student Magic Link
       const isStudentLink = checkUrlMagicLink();
       if (isStudentLink) {
         initStudentPortal();
       } else {
-        // Default: Start at Teacher Center
         initTeacherPortal();
       }
     };
